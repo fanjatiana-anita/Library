@@ -1,10 +1,7 @@
 package repository;
 
-import model.*;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import java.util.List;
+     import model.Profil;
+     import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ProfilRepository extends JpaRepository<Profil, Integer> {
-    Profil findByIdProfil(Integer idProfil);
-}
+     public interface ProfilRepository extends JpaRepository<Profil, Integer> {
+     }

@@ -33,6 +33,9 @@ public class Profil {
     @Column(name = "dureeMaxPret", nullable = false)
     private Integer dureeMaxPret;
 
+    @Column(name = "dureeAbonnement", nullable = false)
+    private Integer dureeAbonnement;
+
     // Getters and Setters
     public Integer getIdProfil() {
         return idProfil;
@@ -96,5 +99,13 @@ public class Profil {
 
     public void setDureeMaxPret(Integer dureeMaxPret) {
         this.dureeMaxPret = dureeMaxPret;
+    }
+
+    public Integer getDureeAbonnement() {
+        return dureeAbonnement;
+    }
+
+    public void setDureeAbonnement(Integer dureeAbonnement) {
+        this.dureeAbonnement = dureeAbonnement;
     }
 }

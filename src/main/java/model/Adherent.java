@@ -20,12 +20,16 @@ public class Adherent {
     @JoinColumn(name = "idProfil", referencedColumnName = "idProfil")
     private Profil profil;
 
+    @Column(name = "statutAdherent", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "statutAdherent")
     private StatutAdherentEnum statutAdherent;
 
-    @Column(name = "dateAdhesion")
+    @Column(name = "dateAdhesion", nullable = false)
     private LocalDate dateAdhesion;
+
+    public enum StatutAdherentEnum {
+        ACTIF, SUSPENDU, INACTIF
+    }
 
     // Getters and Setters
     public Integer getIdAdherent() {
@@ -67,8 +71,4 @@ public class Adherent {
     public void setDateAdhesion(LocalDate dateAdhesion) {
         this.dateAdhesion = dateAdhesion;
     }
-}
-
-enum StatutAdherentEnum {
-    ACTIF, SUSPENDU, INACTIF
 }
