@@ -1,17 +1,21 @@
 package service;
 
-import model.UserAccount;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import repository.UserAccountRepository;
+     import model.UserAccount;
+     import org.springframework.beans.factory.annotation.Autowired;
+     import org.springframework.stereotype.Service;
+     import repository.UserAccountRepository;
 
-@Service
-public class UserAccountService {
+     @Service
+     public class UserAccountService {
 
-    @Autowired
-    private UserAccountRepository userAccountRepository;
+         @Autowired
+         private UserAccountRepository userAccountRepository;
 
-    public UserAccount findByLogin(String login) {
-        return userAccountRepository.findByLogin(login);
-    }
-}
+         public UserAccount findByLogin(String login) {
+             return userAccountRepository.findByLogin(login);
+         }
+
+         public UserAccount save(UserAccount userAccount) {
+             return userAccountRepository.save(userAccount);
+         }
+     }

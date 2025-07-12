@@ -5,13 +5,12 @@ DROP DATABASE IF EXISTS library_mvc;
 CREATE DATABASE library_mvc;
 \connect library_mvc;
 
--- ENUMS nécessaires
+-- ENUMS nécessaires (sauf statut_adherent_enum)
 CREATE TYPE statut_exemplaire_enum AS ENUM ('DISPONIBLE', 'RESERVE', 'EN_PRET');
 CREATE TYPE statut_reservation_enum AS ENUM ('EN_ATTENTE', 'VALIDE', 'REFUSE');
 CREATE TYPE statut_prolongement_enum AS ENUM ('EN_ATTENTE', 'VALIDE', 'REFUSE');
 CREATE TYPE type_jour_enum AS ENUM ('FERIE', 'HEBDOMADAIRE', 'EXCEPTIONNEL');
 CREATE TYPE entite_enum AS ENUM ('PRET', 'RESERVATION', 'PROLONGEMENT', 'LECTURE_SUR_PLACE');
-CREATE TYPE statut_adherent_enum AS ENUM ('ACTIF', 'SUSPENDU', 'INACTIF');
 
 -- Table Personne : Informations personnelles des membres et bibliothécaires
 CREATE TABLE Personne (
@@ -26,8 +25,8 @@ CREATE TABLE Personne (
 CREATE TABLE UserAccount (
     idUserAccount SERIAL PRIMARY KEY,
     idPersonne INTEGER REFERENCES Personne(idPersonne) ON DELETE CASCADE,
-    login VARCHAR(20) UNIQUE NOT NULL, -- Numéro de membre (ex: MBR-001)
-    motDePasse VARCHAR(100) NOT NULL, -- Mot de passe en clair
+    login VARCHAR(20) UNIQUE NOT NULL,
+    motDePasse VARCHAR(100) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('MEMBRE', 'BIBLIOTHECAIRE'))
 );
 
@@ -40,7 +39,8 @@ CREATE TABLE Profil (
     quotaMaxReservation INTEGER NOT NULL,
     quotaMaxProlongement INTEGER NOT NULL,
     dureePenalite INTEGER NOT NULL,
-    dureeMaxPret INTEGER NOT NULL
+    dureeMaxPret INTEGER NOT NULL,
+    dureeAbonnement INTEGER NOT NULL
 );
 
 -- Table Adherent : Membres de la bibliothèque
@@ -48,7 +48,7 @@ CREATE TABLE Adherent (
     idAdherent SERIAL PRIMARY KEY,
     idUserAccount INTEGER UNIQUE REFERENCES UserAccount(idUserAccount) ON DELETE CASCADE,
     idProfil INTEGER REFERENCES Profil(idProfil) ON DELETE RESTRICT,
-    statutAdherent statut_adherent_enum NOT NULL,
+    statutAdherent VARCHAR(20) NOT NULL CHECK (statutAdherent IN ('ACTIF', 'SUSPENDU', 'INACTIF')),
     dateAdhesion DATE NOT NULL
 );
 
@@ -150,7 +150,6 @@ CREATE TABLE HistoriqueEtat (
     etat_apres VARCHAR(100)
 );
 
-
 -- Table JourNonOuvrable : Gestion des jours fériés ou non ouvrables
 CREATE TABLE JourNonOuvrable (
     idJourNonOuvrable SERIAL PRIMARY KEY,
@@ -174,9 +173,10 @@ INSERT INTO Personne (nomPersonne, dateDeNaissance, sexe, adresse) VALUES
 ('Marie Bibliothecaire', '1985-03-22', 'F', '456 Avenue Centrale, Ville');
 
 -- Insérer des profils
-INSERT INTO Profil (profil, montantCotisation, quotaMaxPret, quotaMaxReservation, quotaMaxProlongement, dureePenalite, dureeMaxPret) VALUES
-('Etudiant', 10.00, 3, 2, 1, 7, 14),
-('Bibliothecaire', 0.00, 5, 3, 2, 0, 30);
+INSERT INTO Profil (profil, montantCotisation, quotaMaxPret, quotaMaxReservation, quotaMaxProlongement, dureePenalite, dureeMaxPret, dureeAbonnement) VALUES
+('Etudiant', 10.00, 3, 2, 1, 7, 14, 365),
+('Professeur', 20.00, 5, 3, 2, 7, 21, 730),
+('Personnel', 15.00, 4, 2, 2, 7, 21, 180);
 
 -- Insérer des comptes utilisateur (mots de passe en clair)
 INSERT INTO UserAccount (idPersonne, login, motDePasse, role) VALUES
@@ -190,3 +190,7 @@ INSERT INTO Adherent (idUserAccount, idProfil, statutAdherent, dateAdhesion) VAL
 -- Insérer un bibliothécaire
 INSERT INTO Bibliothecaire (idUserAccount) VALUES
 (2);
+
+-- Insérer un abonnement pour l'adhérent existant
+INSERT INTO Abonnement (idAdherent, dateDebut, dateFin) VALUES
+(1, '2025-07-01', '2026-07-01');
