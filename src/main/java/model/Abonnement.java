@@ -4,23 +4,25 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "abonnement")
+@Table(name = "Abonnement")
 public class Abonnement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idAbonnement")
     private Integer idAbonnement;
 
     @ManyToOne
-    @JoinColumn(name = "idAdherent")
+    @JoinColumn(name = "idAdherent", referencedColumnName = "idAdherent")
     private Adherent adherent;
 
-    @Column(nullable = false)
+    @Column(name = "dateDebut", nullable = false)
     private LocalDate dateDebut;
 
-    @Column(nullable = false)
+    @Column(name = "dateFin", nullable = false)
     private LocalDate dateFin;
 
+    // Getters and Setters
     public Integer getIdAbonnement() {
         return idAbonnement;
     }
@@ -53,6 +55,3 @@ public class Abonnement {
         this.dateFin = dateFin;
     }
 }
-
-
-

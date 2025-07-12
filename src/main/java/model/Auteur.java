@@ -3,17 +3,19 @@ package model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "auteur")
+@Table(name = "Auteur")
 public class Auteur {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idAuteur")
     private Integer idAuteur;
 
-    @ManyToOne
-    @JoinColumn(name = "idPersonne")
+    @OneToOne
+    @JoinColumn(name = "idPersonne", referencedColumnName = "idPersonne")
     private Personne personne;
 
+    // Getters and Setters
     public Integer getIdAuteur() {
         return idAuteur;
     }

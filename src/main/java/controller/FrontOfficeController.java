@@ -1,15 +1,23 @@
 package controller;
 
+import jakarta.servlet.http.HttpSession;
+import model.UserAccount;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-// @RequestMapping("/frontOffice")
+@RequestMapping("/frontoffice")
 public class FrontOfficeController {
 
-    @GetMapping("/home")
-    public String dashboard() {
-        return "frontOffice/home"; 
+    @GetMapping("/accueil")
+    public String showAccueil(HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"MEMBRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", user);
+        return "frontOffice/accueil";
     }
 }

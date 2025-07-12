@@ -3,25 +3,26 @@ package model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "restrictionprofillivre")
+@Table(name = "RestrictionProfilLivre")
 public class RestrictionProfilLivre {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idRestrictionProfilLivre")
     private Integer idRestrictionProfilLivre;
 
     @ManyToOne
-    @JoinColumn(name = "idLivre")
+    @JoinColumn(name = "idLivre", referencedColumnName = "idLivre")
     private Livre livre;
 
+    @Column(name = "ageMinRequis")
     private Integer ageMinRequis;
 
     @ManyToOne
-    @JoinColumn(name = "idProfil")
+    @JoinColumn(name = "idProfil", referencedColumnName = "idProfil")
     private Profil profil;
 
-    // Getters & Setters
-
+    // Getters and Setters
     public Integer getIdRestrictionProfilLivre() {
         return idRestrictionProfilLivre;
     }

@@ -11,35 +11,32 @@ public class AdherentService {
     @Autowired
     private AdherentRepository adherentRepository;
 
-    public void save(Adherent adherent) {
-        adherentRepository.save(adherent);
+    // Récupère un adhérent par son ID
+    public Adherent findById(Integer idAdherent) {
+        return adherentRepository.findById(idAdherent).orElse(null);
     }
 
-    public Adherent findByUserAccountId(Integer idUserAccount) {
-        return adherentRepository.findByUserAccountIdUserAccount(idUserAccount);
-    }
-
-    public int getQuotaPret(int idAdherent) {
-        Adherent adherent = adherentRepository.findById(idAdherent).orElse(null);
-        if (adherent != null && adherent.getProfil() != null) {
-            return adherent.getProfil().getQuotaMax();
+    // Vérifie le quota maximum de prêts pour un adhérent
+    public Integer getQuotaMaxPret(Adherent adherent) {
+        if (adherent == null || adherent.getProfil() == null) {
+            return 0;
         }
-        return 0; // valeur par défaut si pas trouvé
+        return adherent.getProfil().getQuotaMaxPret();
     }
 
-    public int getQuotaReservation(int idAdherent) {
-        Adherent adherent = adherentRepository.findById(idAdherent).orElse(null);
-        if (adherent != null && adherent.getProfil() != null) {
-            return adherent.getProfil().getQuotaReservation();
+    // Vérifie le quota maximum de réservations pour un adhérent
+    public Integer getQuotaMaxReservation(Adherent adherent) {
+        if (adherent == null || adherent.getProfil() == null) {
+            return 0;
         }
-        return 0;
+        return adherent.getProfil().getQuotaMaxReservation();
     }
 
-    public int getQuotaProlongement(int idAdherent) {
-        Adherent adherent = adherentRepository.findById(idAdherent).orElse(null);
-        if (adherent != null && adherent.getProfil() != null) {
-            return adherent.getProfil().getQuotaProlongement();
+    // Vérifie le quota maximum de prolongements pour un adhérent
+    public Integer getQuotaMaxProlongement(Adherent adherent) {
+        if (adherent == null || adherent.getProfil() == null) {
+            return 0;
         }
-        return 0;
+        return adherent.getProfil().getQuotaMaxProlongement();
     }
 }

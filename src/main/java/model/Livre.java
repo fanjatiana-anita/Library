@@ -1,10 +1,9 @@
 package model;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
-@Table(name = "livre")
+@Table(name = "Livre")
 public class Livre {
 
     @Id
@@ -12,13 +11,14 @@ public class Livre {
     @Column(name = "idLivre")
     private Integer idLivre;
 
+    @Column(name = "titreLivre", nullable = false)
     private String titreLivre;
 
     @ManyToOne
-    @JoinColumn(name = "idAuteur")
+    @JoinColumn(name = "idAuteur", referencedColumnName = "idAuteur")
     private Auteur auteur;
 
-
+    // Getters and Setters
     public Integer getIdLivre() {
         return idLivre;
     }
@@ -42,5 +42,4 @@ public class Livre {
     public void setAuteur(Auteur auteur) {
         this.auteur = auteur;
     }
-
 }

@@ -1,7 +1,6 @@
 package model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "JourNonOuvrable")
@@ -13,14 +12,14 @@ public class JourNonOuvrable {
     private Integer idJourNonOuvrable;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", columnDefinition = "type_jour_enum")
+    @Column(name = "type", nullable = false)
     private TypeJourEnum type;
 
-    @Column(name = "jourSemaine")
+    @Column(name = "jourSemaine", columnDefinition = "SMALLINT")
     private Short jourSemaine;
 
     @Column(name = "dateFerie")
-    private LocalDate dateFerie;
+    private java.time.LocalDate dateFerie;
 
     @Column(name = "description")
     private String description;
@@ -50,11 +49,11 @@ public class JourNonOuvrable {
         this.jourSemaine = jourSemaine;
     }
 
-    public LocalDate getDateFerie() {
+    public java.time.LocalDate getDateFerie() {
         return dateFerie;
     }
 
-    public void setDateFerie(LocalDate dateFerie) {
+    public void setDateFerie(java.time.LocalDate dateFerie) {
         this.dateFerie = dateFerie;
     }
 
@@ -65,8 +64,8 @@ public class JourNonOuvrable {
     public void setDescription(String description) {
         this.description = description;
     }
-}
 
-enum TypeJourEnum {
-    FERIE, HEBDOMADAIRE, EXCEPTIONNEL
+    public enum TypeJourEnum {
+        FERIE, HEBDOMADAIRE, EXCEPTIONNEL
+    }
 }

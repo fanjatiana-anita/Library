@@ -3,44 +3,34 @@ package model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "useraccount")
+@Table(name = "UserAccount")
 public class UserAccount {
-
-    public enum Role {
-        BIBLIOTHECAIRE,
-        ADHERENT
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idUserAccount")
     private Integer idUserAccount;
 
-    @ManyToOne
-    @JoinColumn(name = "idpersonne")
+    @OneToOne
+    @JoinColumn(name = "idPersonne", referencedColumnName = "idPersonne")
     private Personne personne;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "login", nullable = false, unique = true)
     private String login;
 
-    @Column(nullable = false)
+    @Column(name = "motDePasse", nullable = false)
     private String motDePasse;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    @Column(name = "role", nullable = false)
+    private String role;
 
-    private boolean estActif = true;
-
-    @Column(nullable = false)
-    private boolean doitChangerMotDePasse = true;
-
-    // Getters et setters
+    // Getters and Setters
     public Integer getIdUserAccount() {
         return idUserAccount;
     }
 
-    public void setIdUserAccount(Integer id) {
-        this.idUserAccount = id;
+    public void setIdUserAccount(Integer idUserAccount) {
+        this.idUserAccount = idUserAccount;
     }
 
     public Personne getPersonne() {
@@ -67,27 +57,11 @@ public class UserAccount {
         this.motDePasse = motDePasse;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
-    }
-
-    public boolean isEstActif() {
-        return estActif;
-    }
-
-    public void setEstActif(boolean estActif) {
-        this.estActif = estActif;
-    }
-
-    public boolean isDoitChangerMotDePasse() {
-        return doitChangerMotDePasse;
-    }
-
-    public void setDoitChangerMotDePasse(boolean doitChangerMotDePasse) {
-        this.doitChangerMotDePasse = doitChangerMotDePasse;
     }
 }

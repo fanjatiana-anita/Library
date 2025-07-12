@@ -16,9 +16,10 @@ public class Exemplaire {
     private Livre livre;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "statutExemplaire", columnDefinition = "statut_exemplaire_enum")
-    private StatutExemplaire statutExemplaire;
+    @Column(name = "statutExemplaire", nullable = false)
+    private StatutExemplaireEnum statutExemplaire;
 
+    // Getters and Setters
     public Integer getIdExemplaire() {
         return idExemplaire;
     }
@@ -35,15 +36,15 @@ public class Exemplaire {
         this.livre = livre;
     }
 
-    public StatutExemplaire getStatutExemplaire() {
+    public StatutExemplaireEnum getStatutExemplaire() {
         return statutExemplaire;
     }
 
-    public void setStatutExemplaire(StatutExemplaire statutExemplaire) {
+    public void setStatutExemplaire(StatutExemplaireEnum statutExemplaire) {
         this.statutExemplaire = statutExemplaire;
     }
 }
 
-enum StatutExemplaire {
+enum StatutExemplaireEnum {
     DISPONIBLE, RESERVE, EN_PRET
 }
