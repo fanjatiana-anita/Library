@@ -13,17 +13,20 @@ public class HistoriqueEtat {
     private Integer idHistoriqueEtat;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "entite", columnDefinition = "entite_enum")
+    @Column(name = "entite", nullable = false)
     private EntiteEnum entite;
 
-    @Column(name = "idEntite")
+    @Column(name = "id_entite", nullable = false)
     private Integer idEntite;
 
-    @Column(name = "statut")
-    private String statut;
+    @Column(name = "date_changement", nullable = false)
+    private LocalDateTime dateChangement;
 
-    @Column(name = "dateStatut")
-    private LocalDateTime dateStatut;
+    @Column(name = "etat_avant")
+    private String etatAvant;
+
+    @Column(name = "etat_apres")
+    private String etatApres;
 
     // Getters and Setters
     public Integer getIdHistoriqueEtat() {
@@ -50,23 +53,31 @@ public class HistoriqueEtat {
         this.idEntite = idEntite;
     }
 
-    public String getStatut() {
-        return statut;
+    public LocalDateTime getDateChangement() {
+        return dateChangement;
     }
 
-    public void setStatut(String statut) {
-        this.statut = statut;
+    public void setDateChangement(LocalDateTime dateChangement) {
+        this.dateChangement = dateChangement;
     }
 
-    public LocalDateTime getDateStatut() {
-        return dateStatut;
+    public String getEtatAvant() {
+        return etatAvant;
     }
 
-    public void setDateStatut(LocalDateTime dateStatut) {
-        this.dateStatut = dateStatut;
+    public void setEtatAvant(String etatAvant) {
+        this.etatAvant = etatAvant;
+    }
+
+    public String getEtatApres() {
+        return etatApres;
+    }
+
+    public void setEtatApres(String etatApres) {
+        this.etatApres = etatApres;
     }
 }
 
 enum EntiteEnum {
-    PRET, RESERVATION, PROLONGEMENT
+    PRET, RESERVATION, PROLONGEMENT, LECTURE_SUR_PLACE
 }

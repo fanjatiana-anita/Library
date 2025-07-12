@@ -1,6 +1,5 @@
 package service;
 
-import jakarta.transaction.Transactional;
 import model.UserAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,14 +11,7 @@ public class UserAccountService {
     @Autowired
     private UserAccountRepository userAccountRepository;
 
-    public void save(UserAccount userAccount) {
-        userAccountRepository.save(userAccount);
-    }
-
-    @Transactional
-    public UserAccount authenticate(String login, String password) {
-        return userAccountRepository.findByLoginAndMotDePasse(login, password)
-                   .filter(UserAccount::isEstActif)
-                   .orElse(null);
+    public UserAccount findByLogin(String login) {
+        return userAccountRepository.findByLogin(login);
     }
 }

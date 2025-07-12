@@ -4,29 +4,26 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "prolongement")
+@Table(name = "Prolongement")
 public class Prolongement {
-
-    public enum StatutProlongement {
-        VALIDE,
-        EN_ATTENTE_DE_VALIDATION
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idProlongement")
     private Integer idProlongement;
 
     @ManyToOne
-    @JoinColumn(name = "idPret")
+    @JoinColumn(name = "idPret", referencedColumnName = "idPret")
     private Pret pret;
 
+    @Column(name = "dateDeDemande", nullable = false)
     private LocalDate dateDeDemande;
 
     @Enumerated(EnumType.STRING)
-    private StatutProlongement statutProlongement;
+    @Column(name = "statutProlongement", nullable = false)
+    private StatutProlongementEnum statutProlongement;
 
-
-
+    // Getters and Setters
     public Integer getIdProlongement() {
         return idProlongement;
     }
@@ -51,11 +48,15 @@ public class Prolongement {
         this.dateDeDemande = dateDeDemande;
     }
 
-    public StatutProlongement getStatutProlongement() {
+    public StatutProlongementEnum getStatutProlongement() {
         return statutProlongement;
     }
 
-    public void setStatutProlongement(StatutProlongement statutProlongement) {
+    public void setStatutProlongement(StatutProlongementEnum statutProlongement) {
         this.statutProlongement = statutProlongement;
     }
+}
+
+enum StatutProlongementEnum {
+    EN_ATTENTE, VALIDE, REFUSE
 }

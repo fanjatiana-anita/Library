@@ -10,27 +10,27 @@ public class Profil {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idProfil")
-    private Integer idProfil; // Supposé Integer basé sur SERIAL dans schema.sql
+    private Integer idProfil;
 
-    @Column(name = "profil")
+    @Column(name = "profil", nullable = false)
     private String profil;
 
-    @Column(name = "montantCotisation")
-    private BigDecimal montantCotisation; // Changé de Double à BigDecimal
+    @Column(name = "montantCotisation", precision = 10, scale = 2)
+    private BigDecimal montantCotisation;
 
-    @Column(name = "quotaMax")
-    private Integer quotaMax;
+    @Column(name = "quotaMaxPret", nullable = false)
+    private Integer quotaMaxPret;
 
-    @Column(name = "quotaProlongement")
-    private Integer quotaProlongement;
+    @Column(name = "quotaMaxReservation", nullable = false)
+    private Integer quotaMaxReservation;
 
-    @Column(name = "quotaReservation")
-    private Integer quotaReservation;
+    @Column(name = "quotaMaxProlongement", nullable = false)
+    private Integer quotaMaxProlongement;
 
-    @Column(name = "dureePenalite")
+    @Column(name = "dureePenalite", nullable = false)
     private Integer dureePenalite;
 
-    @Column(name = "dureeMaxPret")
+    @Column(name = "dureeMaxPret", nullable = false)
     private Integer dureeMaxPret;
 
     // Getters and Setters
@@ -58,28 +58,28 @@ public class Profil {
         this.montantCotisation = montantCotisation;
     }
 
-    public Integer getQuotaMax() {
-        return quotaMax;
+    public Integer getQuotaMaxPret() {
+        return quotaMaxPret;
     }
 
-    public void setQuotaMax(Integer quotaMax) {
-        this.quotaMax = quotaMax;
+    public void setQuotaMaxPret(Integer quotaMaxPret) {
+        this.quotaMaxPret = quotaMaxPret;
     }
 
-    public Integer getQuotaProlongement() {
-        return quotaProlongement;
+    public Integer getQuotaMaxReservation() {
+        return quotaMaxReservation;
     }
 
-    public void setQuotaProlongement(Integer quotaProlongement) {
-        this.quotaProlongement = quotaProlongement;
+    public void setQuotaMaxReservation(Integer quotaMaxReservation) {
+        this.quotaMaxReservation = quotaMaxReservation;
     }
 
-    public Integer getQuotaReservation() {
-        return quotaReservation;
+    public Integer getQuotaMaxProlongement() {
+        return quotaMaxProlongement;
     }
 
-    public void setQuotaReservation(Integer quotaReservation) {
-        this.quotaReservation = quotaReservation;
+    public void setQuotaMaxProlongement(Integer quotaMaxProlongement) {
+        this.quotaMaxProlongement = quotaMaxProlongement;
     }
 
     public Integer getDureePenalite() {

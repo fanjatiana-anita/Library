@@ -4,35 +4,33 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "reservation")
+@Table(name = "Reservation")
 public class Reservation {
-
-    public enum StatutReservation {
-        VALIDE,
-        EN_ATTENTE_DE_VALIDATION
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idReservation")
     private Integer idReservation;
 
     @ManyToOne
-    @JoinColumn(name = "idAdherent")
+    @JoinColumn(name = "idAdherent", referencedColumnName = "idAdherent")
     private Adherent adherent;
 
     @ManyToOne
-    @JoinColumn(name = "idExemplaire")
+    @JoinColumn(name = "idExemplaire", referencedColumnName = "idExemplaire")
     private Exemplaire exemplaire;
 
+    @Column(name = "dateDeReservation", nullable = false)
     private LocalDate dateDeReservation;
 
+    @Column(name = "dateDuPretPrevue")
     private LocalDate dateDuPretPrevue;
 
     @Enumerated(EnumType.STRING)
-    private StatutReservation statutReservation;
+    @Column(name = "statutReservation", nullable = false)
+    private StatutReservationEnum statutReservation;
 
-  
-
+    // Getters and Setters
     public Integer getIdReservation() {
         return idReservation;
     }
@@ -73,11 +71,15 @@ public class Reservation {
         this.dateDuPretPrevue = dateDuPretPrevue;
     }
 
-    public StatutReservation getStatutReservation() {
+    public StatutReservationEnum getStatutReservation() {
         return statutReservation;
     }
 
-    public void setStatutReservation(StatutReservation statutReservation) {
+    public void setStatutReservation(StatutReservationEnum statutReservation) {
         this.statutReservation = statutReservation;
+    }
+
+    public enum StatutReservationEnum {
+        EN_ATTENTE, VALIDE, REFUSE
     }
 }

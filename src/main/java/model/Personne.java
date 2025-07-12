@@ -1,27 +1,30 @@
 package model;
 
 import jakarta.persistence.*;
-
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "personne")
+@Table(name = "Personne")
 public class Personne {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idPersonne")
     private Integer idPersonne;
 
-    @Column(nullable = false)
+    @Column(name = "nomPersonne", nullable = false)
     private String nomPersonne;
 
-    @Column(nullable = false)
+    @Column(name = "dateDeNaissance", nullable = false)
     private LocalDate dateDeNaissance;
 
+    @Column(name = "sexe")
     private String sexe;
 
+    @Column(name = "adresse")
     private String adresse;
 
+    // Getters and Setters
     public Integer getIdPersonne() {
         return idPersonne;
     }

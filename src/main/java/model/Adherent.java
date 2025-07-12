@@ -13,22 +13,19 @@ public class Adherent {
     private Integer idAdherent;
 
     @OneToOne
-    @JoinColumn(name = "idPersonne", referencedColumnName = "idPersonne")
-    private Personne personne;
+    @JoinColumn(name = "idUserAccount", referencedColumnName = "idUserAccount")
+    private UserAccount userAccount;
 
     @ManyToOne
     @JoinColumn(name = "idProfil", referencedColumnName = "idProfil")
     private Profil profil;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "statutAdherent", columnDefinition = "statut_adherent_enum")
+    @Column(name = "statutAdherent")
     private StatutAdherentEnum statutAdherent;
 
     @Column(name = "dateAdhesion")
     private LocalDate dateAdhesion;
-
-    @OneToOne(mappedBy = "adherent")
-    private UserAccount userAccount;
 
     // Getters and Setters
     public Integer getIdAdherent() {
@@ -39,12 +36,12 @@ public class Adherent {
         this.idAdherent = idAdherent;
     }
 
-    public Personne getPersonne() {
-        return personne;
+    public UserAccount getUserAccount() {
+        return userAccount;
     }
 
-    public void setPersonne(Personne personne) {
-        this.personne = personne;
+    public void setUserAccount(UserAccount userAccount) {
+        this.userAccount = userAccount;
     }
 
     public Profil getProfil() {
@@ -69,14 +66,6 @@ public class Adherent {
 
     public void setDateAdhesion(LocalDate dateAdhesion) {
         this.dateAdhesion = dateAdhesion;
-    }
-
-    public UserAccount getUserAccount() {
-        return userAccount;
-    }
-
-    public void setUserAccount(UserAccount userAccount) {
-        this.userAccount = userAccount;
     }
 }
 

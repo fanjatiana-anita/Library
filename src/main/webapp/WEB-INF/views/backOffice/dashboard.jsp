@@ -1,14 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<html>
-<head>
-    <title>JSP</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
-
-</head>
-
-<body>
-    <h1>BIBLIOTHEQUE</h1>
-</body>
-<a href="${pageContext.request.contextPath}/inscription">Inscrire</a>
-
-</html>
+     <html>
+     <head>
+         <title>Tableau de bord - BackOffice</title>
+     </head>
+     <body>
+         <h2>Bienvenue, ${user.login} !</h2>
+         <p>Ceci est le tableau de bord pour les bibliothécaires.</p>
+         <a href="${pageContext.request.contextPath}/logout">Se déconnecter</a>
+     </body>
+     </html>
