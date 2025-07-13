@@ -19,7 +19,10 @@ public class Exemplaire {
     @Column(name = "statutExemplaire", nullable = false)
     private StatutExemplaireEnum statutExemplaire;
 
-    // Getters and Setters
+    public enum StatutExemplaireEnum {
+        DISPONIBLE, RESERVE, EN_PRET
+    }
+
     public Integer getIdExemplaire() {
         return idExemplaire;
     }
@@ -43,8 +46,4 @@ public class Exemplaire {
     public void setStatutExemplaire(StatutExemplaireEnum statutExemplaire) {
         this.statutExemplaire = statutExemplaire;
     }
-}
-
-enum StatutExemplaireEnum {
-    DISPONIBLE, RESERVE, EN_PRET
 }

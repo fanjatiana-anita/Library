@@ -1,12 +1,7 @@
 package controller;
 
 import jakarta.servlet.http.HttpSession;
-import model.Adherent;
-import model.Abonnement;
-import model.HistoriquePaiement;
-import model.Personne;
-import model.Profil;
-import model.UserAccount;
+import model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,12 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import service.AdherentService;
-import service.AbonnementService;
-import service.HistoriquePaiementService;
-import service.PersonneService;
-import service.ProfilService;
-import service.UserAccountService;
+import service.*;
+import repository.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -45,6 +36,23 @@ public class BackOfficeController {
 
     @Autowired
     private HistoriquePaiementService historiquePaiementService;
+
+    @Autowired
+    private PretService pretService;
+
+    @Autowired
+    private LivreService livreService;
+
+    @Autowired
+    private ExemplaireService exemplaireService;
+
+    @Autowired
+    private PretRepository pretRepository;
+
+    @GetMapping({"", "/"})
+    public String redirectToLogin() {
+        return "redirect:/login";
+    }
 
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
@@ -106,7 +114,7 @@ public class BackOfficeController {
             UserAccount userAccount = new UserAccount();
             userAccount.setPersonne(personne);
             userAccount.setLogin(login);
-            userAccount.setMotDePasse(motDePasse); // À hasher
+            userAccount.setMotDePasse(motDePasse);
             userAccount.setRole("MEMBRE");
             userAccount = userAccountService.save(userAccount);
 
@@ -179,7 +187,6 @@ public class BackOfficeController {
         }
 
         try {
-            // Vérifier si l'adhérent existe
             UserAccount userAccount = userAccountService.findByLogin(login);
             if (userAccount == null || !"MEMBRE".equals(userAccount.getRole())) {
                 model.addAttribute("error", "Aucun adhérent trouvé avec ce login.");
@@ -194,7 +201,6 @@ public class BackOfficeController {
                 return "backOffice/reabonnement";
             }
 
-            // Récupérer le dernier abonnement
             Abonnement dernierAbonnement = abonnementService.findLastByAdherent(adherent);
             if (dernierAbonnement == null) {
                 model.addAttribute("error", "Aucun abonnement existant pour cet adhérent.");
@@ -209,10 +215,7 @@ public class BackOfficeController {
                 return "backOffice/reabonnement";
             }
 
-            // Déterminer la date de début (toujours la date de fin du dernier abonnement)
             LocalDate dateDebut = dernierAbonnement.getDateFin();
-
-            // Déterminer la date de fin
             LocalDate dateFin;
             Profil profil = adherent.getProfil();
             if (dateFinAbonnement != null && !dateFinAbonnement.isEmpty()) {
@@ -226,25 +229,21 @@ public class BackOfficeController {
                 dateFin = dateDebut.plusDays(profil.getDureeAbonnement());
             }
 
-            // Mettre à jour le statut de l'adhérent à ACTIF
             adherent.setStatutAdherent(Adherent.StatutAdherentEnum.ACTIF);
             adherentService.save(adherent);
 
-            // Créer un nouvel abonnement
             Abonnement nouvelAbonnement = new Abonnement();
             nouvelAbonnement.setAdherent(adherent);
             nouvelAbonnement.setDateDebut(dateDebut);
             nouvelAbonnement.setDateFin(dateFin);
             abonnementService.save(nouvelAbonnement);
 
-            // Enregistrer le paiement
             HistoriquePaiement paiement = new HistoriquePaiement();
             paiement.setAdherent(adherent);
             paiement.setDatePaiement(datePaiementParsed);
             paiement.setMontantCotisation(profil.getMontantCotisation());
             historiquePaiementService.save(paiement);
 
-            // Rediriger vers la page des détails
             model.addAttribute("adherent", adherent);
             model.addAttribute("userAccount", userAccount);
             model.addAttribute("abonnement", nouvelAbonnement);
@@ -278,5 +277,79 @@ public class BackOfficeController {
         model.addAttribute("abonnement", dernierAbonnement);
         model.addAttribute("personne", userAccount.getPersonne());
         return "backOffice/detailsAdherent";
+    }
+
+    @GetMapping("/pret")
+    public String showPretForm(HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+        List<Livre> livres = livreService.findAll();
+        model.addAttribute("livres", livres);
+        model.addAttribute("user", user);
+        return "backOffice/pret";
+    }
+
+    @GetMapping("/formPret")
+    public String showFormPret(@RequestParam Integer idLivre, HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+        Integer idExemplaire = pretService.findAvailableExemplaire(idLivre);
+        if (idExemplaire == null) {
+            model.addAttribute("error", "Aucun exemplaire disponible pour ce livre.");
+            model.addAttribute("livres", livreService.findAll());
+            return "backOffice/pret";
+        }
+        Livre livre = livreService.findAll().stream()
+                .filter(l -> l.getIdLivre().equals(idLivre))
+                .findFirst()
+                .orElse(null);
+        model.addAttribute("idLivre", idLivre);
+        model.addAttribute("idExemplaire", idExemplaire);
+        model.addAttribute("livre", livre);
+        model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+        return "backOffice/formPret";
+    }
+
+    @PostMapping("/pret")
+    public String processPret(
+            @RequestParam String login,
+            @RequestParam Integer idExemplaire,
+            @RequestParam(required = false) String adjustDirection,
+            HttpSession session,
+            Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+
+        try {
+            PretService.PretResult result = pretService.createPret(login, idExemplaire, adjustDirection);
+            if (result.getPret() == null) {
+                model.addAttribute("error", result.getMessage());
+                model.addAttribute("livres", livreService.findAll());
+                return "backOffice/pret";
+            }
+
+            Adherent adherent = adherentService.findByUserAccount(userAccountService.findByLogin(login));
+            Exemplaire exemplaire = exemplaireService.findById(idExemplaire);
+            model.addAttribute("pret", result.getPret());
+            model.addAttribute("adherent", adherent);
+            model.addAttribute("exemplaire", exemplaire);
+            model.addAttribute("livre", exemplaire.getLivre());
+            model.addAttribute("personne", adherent.getUserAccount().getPersonne());
+            if (result.getMessage() != null) {
+                model.addAttribute("message", result.getMessage());
+            }
+            model.addAttribute("success", "Prêt enregistré avec succès.");
+            return "backOffice/detailsPret";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du prêt : " + e.getMessage());
+            model.addAttribute("livres", livreService.findAll());
+            return "backOffice/pret";
+        }
     }
 }

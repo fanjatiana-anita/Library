@@ -10,13 +10,10 @@ import java.util.List;
 @Service
 public class LivreService {
 
-    @Autowired private LivreRepository livreRepository;
+    @Autowired
+    private LivreRepository livreRepository;
 
     public List<Livre> findAll() {
         return livreRepository.findAll();
-    }
-
-    public Livre findById(Integer idLivre) {
-        return livreRepository.findById(idLivre).orElse(null);
     }
 }
