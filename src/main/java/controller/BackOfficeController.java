@@ -3,6 +3,7 @@ package controller;
 import jakarta.servlet.http.HttpSession;
 import model.Adherent;
 import model.Abonnement;
+import model.HistoriquePaiement;
 import model.Personne;
 import model.Profil;
 import model.UserAccount;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.AdherentService;
 import service.AbonnementService;
+import service.HistoriquePaiementService;
 import service.PersonneService;
 import service.ProfilService;
 import service.UserAccountService;
@@ -40,6 +42,9 @@ public class BackOfficeController {
 
     @Autowired
     private AbonnementService abonnementService;
+
+    @Autowired
+    private HistoriquePaiementService historiquePaiementService;
 
     @GetMapping("/dashboard")
     public String showDashboard(HttpSession session, Model model) {
@@ -83,7 +88,6 @@ public class BackOfficeController {
             return "redirect:/login";
         }
 
-        // Vérifier l'unicité du login
         if (userAccountService.findByLogin(login) != null) {
             model.addAttribute("error", "Ce login est déjà utilisé.");
             model.addAttribute("profils", profilService.findAll());
@@ -92,7 +96,6 @@ public class BackOfficeController {
         }
 
         try {
-            // Créer une nouvelle personne
             Personne personne = new Personne();
             personne.setNomPersonne(nomPersonne);
             personne.setDateDeNaissance(LocalDate.parse(dateDeNaissance));
@@ -100,15 +103,13 @@ public class BackOfficeController {
             personne.setAdresse(adresse);
             personne = personneService.save(personne);
 
-            // Créer un compte utilisateur
             UserAccount userAccount = new UserAccount();
             userAccount.setPersonne(personne);
             userAccount.setLogin(login);
-            userAccount.setMotDePasse(motDePasse); // À hasher dans une implémentation réelle
+            userAccount.setMotDePasse(motDePasse); // À hasher
             userAccount.setRole("MEMBRE");
             userAccount = userAccountService.save(userAccount);
 
-            // Créer un adhérent
             Adherent adherent = new Adherent();
             adherent.setUserAccount(userAccount);
             Profil profil = profilService.findById(idProfil);
@@ -118,7 +119,6 @@ public class BackOfficeController {
             adherent.setDateAdhesion(adhesionDate);
             adherent = adherentService.save(adherent);
 
-            // Créer un abonnement
             Abonnement abonnement = new Abonnement();
             abonnement.setAdherent(adherent);
             abonnement.setDateDebut(adhesionDate);
@@ -137,6 +137,12 @@ public class BackOfficeController {
             abonnement.setDateFin(dateFin);
             abonnementService.save(abonnement);
 
+            HistoriquePaiement paiement = new HistoriquePaiement();
+            paiement.setAdherent(adherent);
+            paiement.setDatePaiement(adhesionDate);
+            paiement.setMontantCotisation(profil.getMontantCotisation());
+            historiquePaiementService.save(paiement);
+
             model.addAttribute("success", "Adhérent inscrit et abonné avec succès.");
             model.addAttribute("profils", profilService.findAll());
             model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
@@ -147,5 +153,130 @@ public class BackOfficeController {
             model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
             return "backOffice/inscriptionAdherent";
         }
+    }
+
+    @GetMapping("/reabonnement")
+    public String showReabonnementForm(HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", user);
+        model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+        return "backOffice/reabonnement";
+    }
+
+    @PostMapping("/reabonnement")
+    public String processReabonnement(
+            @RequestParam String login,
+            @RequestParam String datePaiement,
+            @RequestParam(required = false) String dateFinAbonnement,
+            HttpSession session,
+            Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+
+        try {
+            // Vérifier si l'adhérent existe
+            UserAccount userAccount = userAccountService.findByLogin(login);
+            if (userAccount == null || !"MEMBRE".equals(userAccount.getRole())) {
+                model.addAttribute("error", "Aucun adhérent trouvé avec ce login.");
+                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                return "backOffice/reabonnement";
+            }
+
+            Adherent adherent = adherentService.findByUserAccount(userAccount);
+            if (adherent == null) {
+                model.addAttribute("error", "Aucun adhérent associé à ce compte.");
+                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                return "backOffice/reabonnement";
+            }
+
+            // Récupérer le dernier abonnement
+            Abonnement dernierAbonnement = abonnementService.findLastByAdherent(adherent);
+            if (dernierAbonnement == null) {
+                model.addAttribute("error", "Aucun abonnement existant pour cet adhérent.");
+                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                return "backOffice/reabonnement";
+            }
+
+            LocalDate datePaiementParsed = LocalDate.parse(datePaiement);
+            if (datePaiementParsed.isBefore(dernierAbonnement.getDateDebut())) {
+                model.addAttribute("error", "La date de paiement doit être postérieure ou égale à la date de début du dernier abonnement.");
+                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                return "backOffice/reabonnement";
+            }
+
+            // Déterminer la date de début (toujours la date de fin du dernier abonnement)
+            LocalDate dateDebut = dernierAbonnement.getDateFin();
+
+            // Déterminer la date de fin
+            LocalDate dateFin;
+            Profil profil = adherent.getProfil();
+            if (dateFinAbonnement != null && !dateFinAbonnement.isEmpty()) {
+                dateFin = LocalDate.parse(dateFinAbonnement);
+                if (dateFin.isBefore(dernierAbonnement.getDateFin()) || dateFin.equals(dernierAbonnement.getDateFin())) {
+                    model.addAttribute("error", "La date de fin d'abonnement doit être postérieure à la date de fin du dernier abonnement.");
+                    model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                    return "backOffice/reabonnement";
+                }
+            } else {
+                dateFin = dateDebut.plusDays(profil.getDureeAbonnement());
+            }
+
+            // Mettre à jour le statut de l'adhérent à ACTIF
+            adherent.setStatutAdherent(Adherent.StatutAdherentEnum.ACTIF);
+            adherentService.save(adherent);
+
+            // Créer un nouvel abonnement
+            Abonnement nouvelAbonnement = new Abonnement();
+            nouvelAbonnement.setAdherent(adherent);
+            nouvelAbonnement.setDateDebut(dateDebut);
+            nouvelAbonnement.setDateFin(dateFin);
+            abonnementService.save(nouvelAbonnement);
+
+            // Enregistrer le paiement
+            HistoriquePaiement paiement = new HistoriquePaiement();
+            paiement.setAdherent(adherent);
+            paiement.setDatePaiement(datePaiementParsed);
+            paiement.setMontantCotisation(profil.getMontantCotisation());
+            historiquePaiementService.save(paiement);
+
+            // Rediriger vers la page des détails
+            model.addAttribute("adherent", adherent);
+            model.addAttribute("userAccount", userAccount);
+            model.addAttribute("abonnement", nouvelAbonnement);
+            model.addAttribute("personne", userAccount.getPersonne());
+            return "backOffice/detailsAdherent";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du réabonnement : " + e.getMessage());
+            model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            return "backOffice/reabonnement";
+        }
+    }
+
+    @GetMapping("/detailsAdherent")
+    public String showDetailsAdherent(@RequestParam Integer idAdherent, HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+
+        Adherent adherent = adherentService.findById(idAdherent);
+        if (adherent == null) {
+            model.addAttribute("error", "Adhérent non trouvé.");
+            model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            return "backOffice/reabonnement";
+        }
+
+        UserAccount userAccount = adherent.getUserAccount();
+        Abonnement dernierAbonnement = abonnementService.findLastByAdherent(adherent);
+        model.addAttribute("adherent", adherent);
+        model.addAttribute("userAccount", userAccount);
+        model.addAttribute("abonnement", dernierAbonnement);
+        model.addAttribute("personne", userAccount.getPersonne());
+        return "backOffice/detailsAdherent";
     }
 }
