@@ -1,7 +1,11 @@
 package repository;
 
-     import model.Adherent;
-     import org.springframework.data.jpa.repository.JpaRepository;
+import model.Adherent;
+import model.UserAccount;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-     public interface AdherentRepository extends JpaRepository<Adherent, Integer> {
-     }
+@Repository
+public interface AdherentRepository extends JpaRepository<Adherent, Integer> {
+    Adherent findByUserAccount(UserAccount userAccount);
+}
