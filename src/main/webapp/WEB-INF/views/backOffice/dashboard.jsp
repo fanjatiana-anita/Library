@@ -3,11 +3,13 @@
 <html>
 <head>
     <title>Tableau de bord - Back Office</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 <body>
     <h2>Bienvenue, ${user.personne.nomPersonne}</h2>
     <p><a href="${pageContext.request.contextPath}/backoffice/inscription">Inscrire un nouvel adhérent</a></p>
     <p><a href="${pageContext.request.contextPath}/backoffice/reabonnement">Réabonner un adhérent</a></p>
+    <p><a href="${pageContext.request.contextPath}/backoffice/pret">Prêter un livre</a></p>
     <p><a href="${pageContext.request.contextPath}/logout">Déconnexion</a></p>
 </body>
 </html>

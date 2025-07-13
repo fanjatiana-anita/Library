@@ -1,18 +1,12 @@
--- Supprimer la base de données si elle existe
 DROP DATABASE IF EXISTS library_mvc;
-
--- Créer la base de données
 CREATE DATABASE library_mvc;
 \connect library_mvc;
 
--- ENUMS nécessaires
-CREATE TYPE statut_exemplaire_enum AS ENUM ('DISPONIBLE', 'RESERVE', 'EN_PRET');
 CREATE TYPE statut_reservation_enum AS ENUM ('EN_ATTENTE', 'VALIDE', 'REFUSE');
 CREATE TYPE statut_prolongement_enum AS ENUM ('EN_ATTENTE', 'VALIDE', 'REFUSE');
 CREATE TYPE type_jour_enum AS ENUM ('FERIE', 'HEBDOMADAIRE', 'EXCEPTIONNEL');
 CREATE TYPE entite_enum AS ENUM ('PRET', 'RESERVATION', 'PROLONGEMENT', 'LECTURE_SUR_PLACE');
 
--- Table Personne
 CREATE TABLE Personne (
     idPersonne SERIAL PRIMARY KEY,
     nomPersonne VARCHAR(100) NOT NULL,
@@ -21,7 +15,6 @@ CREATE TABLE Personne (
     adresse TEXT
 );
 
--- Table UserAccount
 CREATE TABLE UserAccount (
     idUserAccount SERIAL PRIMARY KEY,
     idPersonne INTEGER REFERENCES Personne(idPersonne) ON DELETE CASCADE,
@@ -30,7 +23,6 @@ CREATE TABLE UserAccount (
     role VARCHAR(20) NOT NULL CHECK (role IN ('MEMBRE', 'BIBLIOTHECAIRE'))
 );
 
--- Table Profil
 CREATE TABLE Profil (
     idProfil SERIAL PRIMARY KEY,
     profil VARCHAR(50) NOT NULL,
@@ -43,7 +35,6 @@ CREATE TABLE Profil (
     dureeAbonnement INTEGER NOT NULL
 );
 
--- Table Adherent
 CREATE TABLE Adherent (
     idAdherent SERIAL PRIMARY KEY,
     idUserAccount INTEGER UNIQUE REFERENCES UserAccount(idUserAccount) ON DELETE CASCADE,
@@ -52,13 +43,11 @@ CREATE TABLE Adherent (
     dateAdhesion DATE NOT NULL
 );
 
--- Table Bibliothecaire
 CREATE TABLE Bibliothecaire (
     idBibliothecaire SERIAL PRIMARY KEY,
     idUserAccount INTEGER UNIQUE REFERENCES UserAccount(idUserAccount) ON DELETE CASCADE
 );
 
--- Table Abonnement
 CREATE TABLE Abonnement (
     idAbonnement SERIAL PRIMARY KEY,
     idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
@@ -66,7 +55,6 @@ CREATE TABLE Abonnement (
     dateFin DATE NOT NULL
 );
 
--- Table HistoriquePaiement : Enregistre les paiements de cotisation
 CREATE TABLE HistoriquePaiement (
     idPaiement SERIAL PRIMARY KEY,
     idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
@@ -74,27 +62,23 @@ CREATE TABLE HistoriquePaiement (
     montantCotisation NUMERIC(10, 2) NOT NULL
 );
 
--- Table Auteur
 CREATE TABLE Auteur (
     idAuteur SERIAL PRIMARY KEY,
     idPersonne INTEGER REFERENCES Personne(idPersonne) ON DELETE CASCADE
 );
 
--- Table Livre
 CREATE TABLE Livre (
     idLivre SERIAL PRIMARY KEY,
     titreLivre VARCHAR(200) NOT NULL,
     idAuteur INTEGER REFERENCES Auteur(idAuteur) ON DELETE RESTRICT
 );
 
--- Table Exemplaire
 CREATE TABLE Exemplaire (
     idExemplaire SERIAL PRIMARY KEY,
     idLivre INTEGER REFERENCES Livre(idLivre) ON DELETE CASCADE,
-    statutExemplaire statut_exemplaire_enum NOT NULL
+    statutExemplaire VARCHAR(20) NOT NULL
 );
 
--- Table RestrictionProfilLivre
 CREATE TABLE RestrictionProfilLivre (
     idRestrictionProfilLivre SERIAL PRIMARY KEY,
     idLivre INTEGER REFERENCES Livre(idLivre) ON DELETE CASCADE,
@@ -102,7 +86,6 @@ CREATE TABLE RestrictionProfilLivre (
     idProfil INTEGER REFERENCES Profil(idProfil) ON DELETE RESTRICT
 );
 
--- Table Pret
 CREATE TABLE Pret (
     idPret SERIAL PRIMARY KEY,
     idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
@@ -112,7 +95,6 @@ CREATE TABLE Pret (
     dateDeRetourReelle DATE
 );
 
--- Table ListeLecture
 CREATE TABLE ListeLecture (
     idListeLecture SERIAL PRIMARY KEY,
     idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
@@ -121,7 +103,6 @@ CREATE TABLE ListeLecture (
     finLecture TIMESTAMP
 );
 
--- Table Reservation
 CREATE TABLE Reservation (
     idReservation SERIAL PRIMARY KEY,
     idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
@@ -131,7 +112,6 @@ CREATE TABLE Reservation (
     statutReservation statut_reservation_enum NOT NULL
 );
 
--- Table Prolongement
 CREATE TABLE Prolongement (
     idProlongement SERIAL PRIMARY KEY,
     idPret INTEGER REFERENCES Pret(idPret) ON DELETE CASCADE,
@@ -139,7 +119,6 @@ CREATE TABLE Prolongement (
     statutProlongement statut_prolongement_enum NOT NULL
 );
 
--- Table Penalisation
 CREATE TABLE Penalisation (
     idPenalisation SERIAL PRIMARY KEY,
     idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
@@ -148,7 +127,6 @@ CREATE TABLE Penalisation (
     dateFinPenalisation DATE NOT NULL
 );
 
--- Table HistoriqueEtat
 CREATE TABLE HistoriqueEtat (
     idHistoriqueEtat SERIAL PRIMARY KEY,
     entite entite_enum NOT NULL,
@@ -158,7 +136,6 @@ CREATE TABLE HistoriqueEtat (
     etat_apres VARCHAR(100)
 );
 
--- Table JourNonOuvrable
 CREATE TABLE JourNonOuvrable (
     idJourNonOuvrable SERIAL PRIMARY KEY,
     type type_jour_enum NOT NULL,
@@ -167,7 +144,6 @@ CREATE TABLE JourNonOuvrable (
     description VARCHAR(150)
 );
 
--- Contrainte pour JourNonOuvrable
 ALTER TABLE JourNonOuvrable
 ADD CONSTRAINT check_jour_non_ouvrable
 CHECK (
@@ -175,34 +151,52 @@ CHECK (
     (type IN ('FERIE', 'EXCEPTIONNEL') AND dateFerie IS NOT NULL AND jourSemaine IS NULL)
 );
 
--- Insérer des données dans Personne
 INSERT INTO Personne (nomPersonne, dateDeNaissance, sexe, adresse) VALUES
 ('Jean Dupont', '1990-05-15', 'M', '123 Rue Principale, Ville'),
-('Marie Bibliothecaire', '1985-03-22', 'F', '456 Avenue Centrale, Ville');
+('Marie Bibliothecaire', '1985-03-22', 'F', '456 Avenue Centrale, Ville'),
+('Victor Hugo', '1802-02-26', 'M', 'Paris, France'),
+('Jane Austen', '1775-12-16', 'F', 'Hampshire, Angleterre');
 
--- Insérer des profils
 INSERT INTO Profil (profil, montantCotisation, quotaMaxPret, quotaMaxReservation, quotaMaxProlongement, dureePenalite, dureeMaxPret, dureeAbonnement) VALUES
 ('Etudiant', 10.00, 3, 2, 1, 7, 14, 365),
 ('Professeur', 20.00, 5, 3, 2, 7, 21, 730),
 ('Personnel', 15.00, 4, 2, 2, 7, 21, 180);
 
--- Insérer des comptes utilisateur
 INSERT INTO UserAccount (idPersonne, login, motDePasse, role) VALUES
 (1, 'MBR-001', 'password123', 'MEMBRE'),
 (2, 'BIB-001', 'admin456', 'BIBLIOTHECAIRE');
 
--- Insérer un adhérent
 INSERT INTO Adherent (idUserAccount, idProfil, statutAdherent, dateAdhesion) VALUES
 (1, 1, 'ACTIF', '2025-07-01');
 
--- Insérer un bibliothécaire
 INSERT INTO Bibliothecaire (idUserAccount) VALUES
 (2);
 
--- Insérer un abonnement
 INSERT INTO Abonnement (idAdherent, dateDebut, dateFin) VALUES
 (1, '2025-07-01', '2026-07-01');
 
--- Insérer un paiement initial
 INSERT INTO HistoriquePaiement (idAdherent, datePaiement, montantCotisation) VALUES
 (1, '2025-07-01', 10.00);
+
+INSERT INTO Auteur (idPersonne) VALUES
+(3),
+(4);
+
+INSERT INTO Livre (titreLivre, idAuteur) VALUES
+('Les Misérables', 1),
+('Notre-Dame de Paris', 1),
+('Pride and Prejudice', 2);
+
+INSERT INTO Exemplaire (idLivre, statutExemplaire) VALUES
+(1, 'DISPONIBLE'),
+(1, 'DISPONIBLE'),
+(2, 'EN_PRET'),
+(3, 'DISPONIBLE');
+
+INSERT INTO JourNonOuvrable (type, jourSemaine, dateFerie, description) VALUES
+('HEBDOMADAIRE', 7, NULL, 'Dimanche'),
+('FERIE', NULL, '2025-12-25', 'Noël'),
+('EXCEPTIONNEL', NULL, '2025-07-20', 'Fermeture exceptionnelle');
+
+INSERT INTO JourNonOuvrable (type, jourSemaine, dateFerie, description)
+VALUES ('EXCEPTIONNEL', NULL, '2025-07-27', 'Test jour non ouvrable');
