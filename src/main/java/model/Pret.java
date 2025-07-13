@@ -13,11 +13,11 @@ public class Pret {
     private Integer idPret;
 
     @ManyToOne
-    @JoinColumn(name = "idAdherent", referencedColumnName = "idAdherent")
+    @JoinColumn(name = "idAdherent", nullable = false)
     private Adherent adherent;
 
     @ManyToOne
-    @JoinColumn(name = "idExemplaire", referencedColumnName = "idExemplaire")
+    @JoinColumn(name = "idExemplaire", nullable = false)
     private Exemplaire exemplaire;
 
     @Column(name = "dateDuPret", nullable = false)

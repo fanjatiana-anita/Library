@@ -4,19 +4,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Détails du prêt</title>
+    <title>Formulaire de retour de prêt</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 <body>
-    <h1>Détails du prêt</h1>
+    <h1>Formulaire de retour de prêt</h1>
     <c:if test="${not empty error}">
         <p style="color: red;">${error}</p>
     </c:if>
     <c:if test="${not empty success}">
         <p style="color: green;">${success}</p>
-    </c:if>
-    <c:if test="${not empty message}">
-        <p style="color: blue;">${message}</p>
     </c:if>
 
     <h2>Informations du prêt</h2>
@@ -49,15 +46,20 @@
                 <fmt:formatDate value="${pretDisplay.dateDeRetourPrevue}" pattern="yyyy-MM-dd"/>
             </td>
         </tr>
-        <c:if test="${pretDisplay.dateDeRetourReelle != null}">
-            <tr>
-                <th>Date de retour réelle</th>
-                <td>
-                    <fmt:formatDate value="${pretDisplay.dateDeRetourReelle}" pattern="yyyy-MM-dd"/>
-                </td>
-            </tr>
-        </c:if>
     </table>
+
+    <h2>Enregistrer le retour</h2>
+    <form action="${pageContext.request.contextPath}/backoffice/processReturn" method="post">
+        <input type="hidden" name="idPret" value="${pretDisplay.pret.idPret}">
+        <p>
+            <label for="dateDeRetourReelle">Date de retour réelle :</label>
+            <input type="date" id="dateDeRetourReelle" name="dateDeRetourReelle" 
+                   value="<fmt:formatDate value='${today}' pattern='yyyy-MM-dd'/>" required>
+        </p>
+        <p>
+            <input type="submit" value="Confirmer le retour">
+        </p>
+    </form>
 
     <br>
     <a href="${pageContext.request.contextPath}/backoffice/return">Retour à la liste des prêts</a>

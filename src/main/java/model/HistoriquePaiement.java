@@ -14,16 +14,15 @@ public class HistoriquePaiement {
     private Integer idPaiement;
 
     @ManyToOne
-    @JoinColumn(name = "idAdherent", referencedColumnName = "idAdherent")
+    @JoinColumn(name = "idAdherent")
     private Adherent adherent;
 
-    @Column(name = "datePaiement", nullable = false)
+    @Column(name = "datePaiement")
     private LocalDate datePaiement;
 
-    @Column(name = "montantCotisation", nullable = false)
+    @Column(name = "montantCotisation")
     private BigDecimal montantCotisation;
 
-    // Getters and Setters
     public Integer getIdPaiement() {
         return idPaiement;
     }
