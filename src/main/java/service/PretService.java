@@ -3,14 +3,18 @@ package service;
 import model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import repository.AdherentRepository;
 import repository.ExemplaireRepository;
 import repository.JourNonOuvrableRepository;
 import repository.PenalisationRepository;
 import repository.PretRepository;
 import repository.RestrictionProfilLivreRepository;
+import repository.HistoriqueEtatRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 
 @Service
@@ -33,6 +37,9 @@ public class PretService {
 
     @Autowired
     private JourNonOuvrableRepository jourNonOuvrableRepository;
+
+    @Autowired
+    private HistoriqueEtatRepository historiqueEtatRepository;
 
     public static class PretResult {
         private Pret pret;
@@ -64,10 +71,29 @@ public class PretService {
         }
     }
 
+    public static class ReturnResult {
+        private Pret pret;
+        private String message;
+
+        public ReturnResult(Pret pret, String message) {
+            this.pret = pret;
+            this.message = message;
+        }
+
+        public Pret getPret() {
+            return pret;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
     public enum AdjustDirection {
         FORWARD, BACKWARD
     }
 
+    @Transactional
     public PretResult createPret(String login, Integer idExemplaire, String adjustDirection) {
         Adherent adherent = adherentRepository.findByUserAccountLogin(login);
         if (adherent == null) {
@@ -100,18 +126,31 @@ public class PretService {
             return new PretResult(null, "L'exemplaire n'est pas disponible.", null, null);
         }
 
+        // Vérification des restrictions
         List<RestrictionProfilLivre> restrictions = restrictionProfilLivreRepository.findByLivre(exemplaire.getLivre());
-        for (RestrictionProfilLivre restriction : restrictions) {
-            if (restriction.getProfil() != null && !restriction.getIdProfil().equals(adherent.getProfil().getIdProfil())) {
-                return new PretResult(null, "L'adhérent n'a pas le droit d'accéder à cet exemplaire.", null, null);
-            }
-            if (restriction.getAgeMinRequis() != null) {
-                LocalDate dateNaissance = adherent.getUserAccount().getPersonne().getDateDeNaissance();
-                int age = LocalDate.now().getYear() - dateNaissance.getYear();
-                if (age < restriction.getAgeMinRequis()) {
-                    return new PretResult(null, "L'adhérent est trop jeune pour accéder à cet exemplaire.", null, null);
+        boolean isAllowed = false;
+        LocalDate dateNaissance = adherent.getUserAccount().getPersonne().getDateDeNaissance();
+        int age = Period.between(dateNaissance, LocalDate.now()).getYears();
+
+        if (restrictions.isEmpty()) {
+            isAllowed = true; // Pas de restrictions : le prêt est autorisé
+        } else {
+            for (RestrictionProfilLivre restriction : restrictions) {
+                if (restriction.getIdProfil() != null && restriction.getIdProfil().equals(adherent.getProfil().getIdProfil())) {
+                    // Restriction trouvée pour le profil de l'adhérent
+                    if (restriction.getAgeMinRequis() == null || age >= restriction.getAgeMinRequis()) {
+                        isAllowed = true; // Âge suffisant ou pas de restriction d'âge
+                        break;
+                    } else {
+                        return new PretResult(null, "L'adhérent est trop jeune pour accéder à cet exemplaire (âge minimum requis : " + 
+                            restriction.getAgeMinRequis() + " ans).", null, null);
+                    }
                 }
             }
+        }
+
+        if (!isAllowed) {
+            return new PretResult(null, "L'adhérent n'a pas le droit d'accéder à cet exemplaire.", null, null);
         }
 
         LocalDate dateDuPret = LocalDate.now();
@@ -137,7 +176,68 @@ public class PretService {
         exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.EN_PRET);
         exemplaireRepository.save(exemplaire);
 
+        HistoriqueEtat historiqueEtat = new HistoriqueEtat();
+        historiqueEtat.setEntite("PRET");
+        historiqueEtat.setIdEntite(pret.getIdPret());
+        historiqueEtat.setEtatAvant(Exemplaire.StatutExemplaireEnum.DISPONIBLE.toString());
+        historiqueEtat.setEtatApres(Exemplaire.StatutExemplaireEnum.EN_PRET.toString());
+        historiqueEtat.setDateChangement(LocalDateTime.now());
+        historiqueEtatRepository.save(historiqueEtat);
+
         return new PretResult(pret, message, originalDateDeRetourPrevue, dateDeRetourPrevue);
+    }
+
+    @Transactional
+    public ReturnResult returnPret(Integer idPret, LocalDate dateDeRetourReelle) {
+        Pret pret = pretRepository.findById(idPret).orElse(null);
+        if (pret == null) {
+            return new ReturnResult(null, "Prêt non trouvé.");
+        }
+        if (pret.getDateDeRetourReelle() != null) {
+            return new ReturnResult(null, "Ce prêt a déjà été retourné.");
+        }
+
+        Exemplaire exemplaire = pret.getExemplaire();
+        Adherent adherent = pret.getAdherent();
+        String message = null;
+
+        pret.setDateDeRetourReelle(dateDeRetourReelle);
+        pretRepository.save(pret);
+
+        exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.DISPONIBLE);
+        exemplaireRepository.save(exemplaire);
+
+        HistoriqueEtat historiqueEtat = new HistoriqueEtat();
+        historiqueEtat.setEntite("PRET");
+        historiqueEtat.setIdEntite(pret.getIdPret());
+        historiqueEtat.setEtatAvant(Exemplaire.StatutExemplaireEnum.EN_PRET.toString());
+        historiqueEtat.setEtatApres(Exemplaire.StatutExemplaireEnum.DISPONIBLE.toString());
+        historiqueEtat.setDateChangement(dateDeRetourReelle.atStartOfDay());
+        historiqueEtatRepository.save(historiqueEtat);
+
+        if (dateDeRetourReelle.isAfter(pret.getDateDeRetourPrevue())) {
+            LocalDate dateDebutPenalisation = dateDeRetourReelle;
+            LocalDate dateFinPenalisation = dateDebutPenalisation.plusDays(adherent.getProfil().getDureePenalite());
+
+            List<Penalisation> penalitesActives = penalisationRepository.findByAdherentAndDateFinPenalisationAfter(adherent, LocalDate.now());
+            if (!penalitesActives.isEmpty()) {
+                Penalisation dernierePenalisation = penalitesActives.get(0);
+                if (dernierePenalisation.getDateFinPenalisation().isAfter(dateDebutPenalisation)) {
+                    dateFinPenalisation = dernierePenalisation.getDateFinPenalisation().plusDays(adherent.getProfil().getDureePenalite());
+                }
+            }
+
+            Penalisation penalisation = new Penalisation();
+            penalisation.setAdherent(adherent);
+            penalisation.setPret(pret);
+            penalisation.setDateDebutPenalisation(dateDebutPenalisation);
+            penalisation.setDateFinPenalisation(dateFinPenalisation);
+            penalisationRepository.save(penalisation);
+
+            message = String.format("L'adhérent a été pénalisé jusqu'au %s pour retard de retour.", dateFinPenalisation);
+        }
+
+        return new ReturnResult(pret, message);
     }
 
     public Integer findAvailableExemplaire(Integer idLivre) {
@@ -163,10 +263,10 @@ public class PretService {
     private boolean isNonWorkingDay(LocalDate date, List<JourNonOuvrable> joursNonOuvrables) {
         int dayOfWeek = date.getDayOfWeek().getValue();
         for (JourNonOuvrable jour : joursNonOuvrables) {
-            if (jour.getType() == JourNonOuvrable.TypeJourEnum.HEBDOMADAIRE && jour.getJourSemaine() == dayOfWeek) {
+            if (jour.getType().equals("HEBDOMADAIRE") && jour.getJourSemaine() == dayOfWeek) {
                 return true;
             }
-            if ((jour.getType() == JourNonOuvrable.TypeJourEnum.FERIE || jour.getType() == JourNonOuvrable.TypeJourEnum.EXCEPTIONNEL)
+            if ((jour.getType().equals("FERIE") || jour.getType().equals("EXCEPTIONNEL"))
                     && jour.getDateFerie() != null && jour.getDateFerie().equals(date)) {
                 return true;
             }

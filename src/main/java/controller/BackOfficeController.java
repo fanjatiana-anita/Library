@@ -13,7 +13,12 @@ import service.*;
 import repository.*;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/backoffice")
@@ -73,7 +78,7 @@ public class BackOfficeController {
         List<Profil> profils = profilService.findAll();
         model.addAttribute("profils", profils);
         model.addAttribute("user", user);
-        model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+        model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
         return "backOffice/inscriptionAdherent";
     }
 
@@ -99,7 +104,7 @@ public class BackOfficeController {
         if (userAccountService.findByLogin(login) != null) {
             model.addAttribute("error", "Ce login est déjà utilisé.");
             model.addAttribute("profils", profilService.findAll());
-            model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
             return "backOffice/inscriptionAdherent";
         }
 
@@ -136,7 +141,7 @@ public class BackOfficeController {
                 if (dateFin.isBefore(adhesionDate)) {
                     model.addAttribute("error", "La date de fin d'abonnement doit être postérieure à la date d'adhésion.");
                     model.addAttribute("profils", profilService.findAll());
-                    model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                    model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
                     return "backOffice/inscriptionAdherent";
                 }
             } else {
@@ -153,12 +158,12 @@ public class BackOfficeController {
 
             model.addAttribute("success", "Adhérent inscrit et abonné avec succès.");
             model.addAttribute("profils", profilService.findAll());
-            model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
             return "backOffice/inscriptionAdherent";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors de l'inscription : " + e.getMessage());
             model.addAttribute("profils", profilService.findAll());
-            model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
             return "backOffice/inscriptionAdherent";
         }
     }
@@ -170,7 +175,7 @@ public class BackOfficeController {
             return "redirect:/login";
         }
         model.addAttribute("user", user);
-        model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+        model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
         return "backOffice/reabonnement";
     }
 
@@ -190,28 +195,28 @@ public class BackOfficeController {
             UserAccount userAccount = userAccountService.findByLogin(login);
             if (userAccount == null || !"MEMBRE".equals(userAccount.getRole())) {
                 model.addAttribute("error", "Aucun adhérent trouvé avec ce login.");
-                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
                 return "backOffice/reabonnement";
             }
 
             Adherent adherent = adherentService.findByUserAccount(userAccount);
             if (adherent == null) {
                 model.addAttribute("error", "Aucun adhérent associé à ce compte.");
-                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
                 return "backOffice/reabonnement";
             }
 
             Abonnement dernierAbonnement = abonnementService.findLastByAdherent(adherent);
             if (dernierAbonnement == null) {
                 model.addAttribute("error", "Aucun abonnement existant pour cet adhérent.");
-                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
                 return "backOffice/reabonnement";
             }
 
             LocalDate datePaiementParsed = LocalDate.parse(datePaiement);
             if (datePaiementParsed.isBefore(dernierAbonnement.getDateDebut())) {
                 model.addAttribute("error", "La date de paiement doit être postérieure ou égale à la date de début du dernier abonnement.");
-                model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
                 return "backOffice/reabonnement";
             }
 
@@ -222,7 +227,7 @@ public class BackOfficeController {
                 dateFin = LocalDate.parse(dateFinAbonnement);
                 if (dateFin.isBefore(dernierAbonnement.getDateFin()) || dateFin.equals(dernierAbonnement.getDateFin())) {
                     model.addAttribute("error", "La date de fin d'abonnement doit être postérieure à la date de fin du dernier abonnement.");
-                    model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                    model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
                     return "backOffice/reabonnement";
                 }
             } else {
@@ -251,7 +256,7 @@ public class BackOfficeController {
             return "backOffice/detailsAdherent";
         } catch (Exception e) {
             model.addAttribute("error", "Erreur lors du réabonnement : " + e.getMessage());
-            model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
             return "backOffice/reabonnement";
         }
     }
@@ -266,7 +271,7 @@ public class BackOfficeController {
         Adherent adherent = adherentService.findById(idAdherent);
         if (adherent == null) {
             model.addAttribute("error", "Adhérent non trouvé.");
-            model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
             return "backOffice/reabonnement";
         }
 
@@ -310,7 +315,7 @@ public class BackOfficeController {
         model.addAttribute("idLivre", idLivre);
         model.addAttribute("idExemplaire", idExemplaire);
         model.addAttribute("livre", livre);
-        model.addAttribute("today", java.util.Date.from(LocalDate.now().atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+        model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
         return "backOffice/formPret";
     }
 
@@ -350,6 +355,178 @@ public class BackOfficeController {
             model.addAttribute("error", "Erreur lors du prêt : " + e.getMessage());
             model.addAttribute("livres", livreService.findAll());
             return "backOffice/pret";
+        }
+    }
+
+    @GetMapping("/return")
+    public String showReturnForm(HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+        model.addAttribute("user", user);
+        model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+        return "backOffice/returnPret";
+    }
+
+    @PostMapping("/return")
+    public String showActivePrets(@RequestParam String login, HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+
+        UserAccount userAccount = userAccountService.findByLogin(login);
+        if (userAccount == null || !"MEMBRE".equals(userAccount.getRole())) {
+            model.addAttribute("error", "Aucun adhérent trouvé avec ce login.");
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+            return "backOffice/returnPret";
+        }
+
+        Adherent adherent = adherentService.findByUserAccount(userAccount);
+        if (adherent == null) {
+            model.addAttribute("error", "Aucun adhérent associé à ce compte.");
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+            return "backOffice/returnPret";
+        }
+
+        List<Pret> activePrets = pretRepository.findByAdherentAndDateDeRetourReelleIsNull(adherent);
+        if (activePrets.isEmpty()) {
+            model.addAttribute("error", "Aucun prêt en cours pour cet adhérent.");
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+            return "backOffice/returnPret";
+        }
+
+        // Convertir les LocalDate en Date pour l'affichage dans le JSP
+        List<Map<String, Object>> pretDisplayList = activePrets.stream().map(pret -> {
+            Map<String, Object> pretDisplay = new HashMap<>();
+            pretDisplay.put("pret", pret);
+            pretDisplay.put("dateDuPret", pret.getDateDuPret() != null ? 
+                Date.from(pret.getDateDuPret().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+            pretDisplay.put("dateDeRetourPrevue", pret.getDateDeRetourPrevue() != null ? 
+                Date.from(pret.getDateDeRetourPrevue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+            return pretDisplay;
+        }).collect(Collectors.toList());
+
+        model.addAttribute("adherent", adherent);
+        model.addAttribute("prets", pretDisplayList);
+        model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+        return "backOffice/returnPret";
+    }
+
+    @GetMapping("/formReturn")
+    public String showFormReturn(@RequestParam Integer idPret, HttpSession session, Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+
+        Pret pret = pretRepository.findById(idPret).orElse(null);
+        if (pret == null) {
+            model.addAttribute("error", "Prêt non trouvé.");
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+            return "backOffice/returnPret";
+        }
+        if (pret.getDateDeRetourReelle() != null) {
+            model.addAttribute("error", "Ce prêt a déjà été retourné.");
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+            return "backOffice/returnPret";
+        }
+
+        // Convertir les LocalDate en Date pour l'affichage dans le JSP
+        Map<String, Object> pretDisplay = new HashMap<>();
+        pretDisplay.put("pret", pret);
+        pretDisplay.put("dateDuPret", pret.getDateDuPret() != null ? 
+            Date.from(pret.getDateDuPret().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+        pretDisplay.put("dateDeRetourPrevue", pret.getDateDeRetourPrevue() != null ? 
+            Date.from(pret.getDateDeRetourPrevue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+
+        model.addAttribute("pretDisplay", pretDisplay);
+        model.addAttribute("pret", pret);
+        model.addAttribute("adherent", pret.getAdherent());
+        model.addAttribute("exemplaire", pret.getExemplaire());
+        model.addAttribute("livre", pret.getExemplaire().getLivre());
+        model.addAttribute("personne", pret.getAdherent().getUserAccount().getPersonne());
+        model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+        return "backOffice/formReturnPret";
+    }
+
+    @PostMapping("/processReturn")
+    public String processReturn(
+            @RequestParam Integer idPret,
+            @RequestParam String dateDeRetourReelle,
+            HttpSession session,
+            Model model) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        if (user == null || !"BIBLIOTHECAIRE".equals(user.getRole())) {
+            return "redirect:/login";
+        }
+
+        try {
+            LocalDate dateRetour = LocalDate.parse(dateDeRetourReelle);
+            Pret pret = pretRepository.findById(idPret).orElse(null);
+            if (pret == null) {
+                model.addAttribute("error", "Prêt non trouvé.");
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+                return "backOffice/returnPret";
+            }
+            if (pret.getDateDeRetourReelle() != null) {
+                model.addAttribute("error", "Ce prêt a déjà été retourné.");
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+                return "backOffice/returnPret";
+            }
+            // Valider que la date de retour réelle est postérieure à la date du prêt
+            if (dateRetour.isBefore(pret.getDateDuPret()) || dateRetour.isEqual(pret.getDateDuPret())) {
+                // Préparer les données pour réafficher le formulaire avec l'erreur
+                Map<String, Object> pretDisplay = new HashMap<>();
+                pretDisplay.put("pret", pret);
+                pretDisplay.put("dateDuPret", pret.getDateDuPret() != null ? 
+                    Date.from(pret.getDateDuPret().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+                pretDisplay.put("dateDeRetourPrevue", pret.getDateDeRetourPrevue() != null ? 
+                    Date.from(pret.getDateDeRetourPrevue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+                model.addAttribute("pretDisplay", pretDisplay);
+                model.addAttribute("pret", pret);
+                model.addAttribute("adherent", pret.getAdherent());
+                model.addAttribute("exemplaire", pret.getExemplaire());
+                model.addAttribute("livre", pret.getExemplaire().getLivre());
+                model.addAttribute("personne", pret.getAdherent().getUserAccount().getPersonne());
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+                model.addAttribute("error", "La date de retour réelle doit être postérieure à la date du prêt (" + pret.getDateDuPret() + ").");
+                return "backOffice/formReturnPret";
+            }
+
+            PretService.ReturnResult result = pretService.returnPret(idPret, dateRetour);
+            if (result.getPret() == null) {
+                model.addAttribute("error", result.getMessage());
+                model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+                return "backOffice/returnPret";
+            }
+
+            // Convertir les LocalDate en Date pour l'affichage dans le JSP
+            Map<String, Object> pretDisplay = new HashMap<>();
+            pretDisplay.put("pret", result.getPret());
+            pretDisplay.put("dateDuPret", result.getPret().getDateDuPret() != null ? 
+                Date.from(result.getPret().getDateDuPret().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+            pretDisplay.put("dateDeRetourPrevue", result.getPret().getDateDeRetourPrevue() != null ? 
+                Date.from(result.getPret().getDateDeRetourPrevue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+            pretDisplay.put("dateDeRetourReelle", result.getPret().getDateDeRetourReelle() != null ? 
+                Date.from(result.getPret().getDateDeRetourReelle().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()) : null);
+
+            model.addAttribute("pretDisplay", pretDisplay);
+            model.addAttribute("pret", result.getPret());
+            model.addAttribute("adherent", result.getPret().getAdherent());
+            model.addAttribute("exemplaire", result.getPret().getExemplaire());
+            model.addAttribute("livre", result.getPret().getExemplaire().getLivre());
+            model.addAttribute("personne", result.getPret().getAdherent().getUserAccount().getPersonne());
+            if (result.getMessage() != null) {
+                model.addAttribute("message", result.getMessage());
+            }
+            model.addAttribute("success", "Retour enregistré avec succès.");
+            return "backOffice/detailsPret";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du retour : " + e.getMessage());
+            model.addAttribute("today", Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant()));
+            return "backOffice/returnPret";
         }
     }
 }

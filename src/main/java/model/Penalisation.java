@@ -13,20 +13,19 @@ public class Penalisation {
     private Integer idPenalisation;
 
     @ManyToOne
-    @JoinColumn(name = "idAdherent", referencedColumnName = "idAdherent")
+    @JoinColumn(name = "idAdherent")
     private Adherent adherent;
 
     @ManyToOne
-    @JoinColumn(name = "idPret", referencedColumnName = "idPret")
+    @JoinColumn(name = "idPret")
     private Pret pret;
 
-    @Column(name = "dateDebutPenalisation", nullable = false)
+    @Column(name = "dateDebutPenalisation")
     private LocalDate dateDebutPenalisation;
 
-    @Column(name = "dateFinPenalisation", nullable = false)
+    @Column(name = "dateFinPenalisation")
     private LocalDate dateFinPenalisation;
 
-    // Getters and Setters
     public Integer getIdPenalisation() {
         return idPenalisation;
     }

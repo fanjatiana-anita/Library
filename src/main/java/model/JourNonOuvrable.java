@@ -3,25 +3,22 @@ package model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "JourNonOuvrable")
 public class JourNonOuvrable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idJourNonOuvrable")
     private Integer idJourNonOuvrable;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private TypeJourEnum type;
+    @Column(nullable = false)
+    private String type;
 
-    @Column(name = "jourSemaine", columnDefinition = "SMALLINT")
-    private Short jourSemaine;
+    @Column
+    private Integer jourSemaine;
 
-    @Column(name = "dateFerie")
+    @Column
     private java.time.LocalDate dateFerie;
 
-    @Column(name = "description")
+    @Column(length = 150)
     private String description;
 
     // Getters and Setters
@@ -33,19 +30,19 @@ public class JourNonOuvrable {
         this.idJourNonOuvrable = idJourNonOuvrable;
     }
 
-    public TypeJourEnum getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(TypeJourEnum type) {
+    public void setType(String type) {
         this.type = type;
     }
 
-    public Short getJourSemaine() {
+    public Integer getJourSemaine() {
         return jourSemaine;
     }
 
-    public void setJourSemaine(Short jourSemaine) {
+    public void setJourSemaine(Integer jourSemaine) {
         this.jourSemaine = jourSemaine;
     }
 
@@ -63,9 +60,5 @@ public class JourNonOuvrable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public enum TypeJourEnum {
-        FERIE, HEBDOMADAIRE, EXCEPTIONNEL
     }
 }

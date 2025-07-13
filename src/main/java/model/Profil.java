@@ -12,31 +12,30 @@ public class Profil {
     @Column(name = "idProfil")
     private Integer idProfil;
 
-    @Column(name = "profil", nullable = false)
+    @Column(name = "profil")
     private String profil;
 
-    @Column(name = "montantCotisation", precision = 10, scale = 2)
+    @Column(name = "montantCotisation")
     private BigDecimal montantCotisation;
 
-    @Column(name = "quotaMaxPret", nullable = false)
+    @Column(name = "quotaMaxPret")
     private Integer quotaMaxPret;
 
-    @Column(name = "quotaMaxReservation", nullable = false)
+    @Column(name = "quotaMaxReservation")
     private Integer quotaMaxReservation;
 
-    @Column(name = "quotaMaxProlongement", nullable = false)
+    @Column(name = "quotaMaxProlongement")
     private Integer quotaMaxProlongement;
 
-    @Column(name = "dureePenalite", nullable = false)
+    @Column(name = "dureePenalite")
     private Integer dureePenalite;
 
-    @Column(name = "dureeMaxPret", nullable = false)
+    @Column(name = "dureeMaxPret")
     private Integer dureeMaxPret;
 
-    @Column(name = "dureeAbonnement", nullable = false)
+    @Column(name = "dureeAbonnement")
     private Integer dureeAbonnement;
 
-    // Getters and Setters
     public Integer getIdProfil() {
         return idProfil;
     }
