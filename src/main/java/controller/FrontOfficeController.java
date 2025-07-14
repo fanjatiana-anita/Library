@@ -93,4 +93,35 @@ public class FrontOfficeController {
         model.addAttribute("message", result.getMessage());
         return "frontOffice/detailsReservation";
     }
+
+    @GetMapping("/mesReservations")
+    public String listReservations(Model model, HttpSession session) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        System.out.println("MesReservations: user=" + (user != null ? user.getLogin() : "null"));
+        if (user == null || !"MEMBRE".equals(user.getRole())) {
+            model.addAttribute("error", "Vous devez être connecté en tant que membre pour accéder à cette page.");
+            return "redirect:/login";
+        }
+        List<Reservation> reservations = reservationService.findReservationsByLogin(user.getLogin());
+        model.addAttribute("reservations", reservations);
+        return "frontOffice/mesReservations";
+    }
+
+    @GetMapping("/detailsReservation")
+    public String detailsReservation(@RequestParam("idReservation") Integer idReservation, Model model, HttpSession session) {
+        UserAccount user = (UserAccount) session.getAttribute("user");
+        System.out.println("DetailsReservation: user=" + (user != null ? user.getLogin() : "null") + ", idReservation=" + idReservation);
+        if (user == null || !"MEMBRE".equals(user.getRole())) {
+            model.addAttribute("error", "Vous devez être connecté en tant que membre pour accéder à cette page.");
+            return "redirect:/login";
+        }
+        Reservation reservation = reservationService.findById(idReservation);
+        if (reservation == null || !reservation.getAdherent().getUserAccount().getLogin().equals(user.getLogin())) {
+            model.addAttribute("error", "Réservation non trouvée ou accès non autorisé.");
+            return "redirect:/frontoffice/mesReservations";
+        }
+        model.addAttribute("reservation", reservation);
+        model.addAttribute("message", "Détails de la réservation");
+        return "frontOffice/detailsReservation";
+    }
 }
