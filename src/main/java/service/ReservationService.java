@@ -148,4 +148,16 @@ public class ReservationService {
                 .toList();
         return exemplaires.isEmpty() ? null : exemplaires.get(0).getIdExemplaire();
     }
+
+    public List<Reservation> findReservationsByLogin(String login) {
+        Adherent adherent = adherentRepository.findByUserAccountLogin(login);
+        if (adherent == null) {
+            return List.of();
+        }
+        return reservationRepository.findByAdherent(adherent);
+    }
+
+    public Reservation findById(Integer idReservation) {
+        return reservationRepository.findById(idReservation).orElse(null);
+    }
 }
