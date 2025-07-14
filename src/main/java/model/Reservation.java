@@ -20,15 +20,19 @@ public class Reservation {
     @JoinColumn(name = "idExemplaire", referencedColumnName = "idExemplaire")
     private Exemplaire exemplaire;
 
-    @Column(name = "dateDeReservation", nullable = false)
+    @Column(name = "dateDeReservation")
     private LocalDate dateDeReservation;
 
     @Column(name = "dateDuPretPrevue")
     private LocalDate dateDuPretPrevue;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "statutReservation", nullable = false)
+    @Column(name = "statutReservation")
     private StatutReservationEnum statutReservation;
+
+    public enum StatutReservationEnum {
+        EN_ATTENTE, VALIDE, REFUSE
+    }
 
     // Getters and Setters
     public Integer getIdReservation() {
@@ -77,9 +81,5 @@ public class Reservation {
 
     public void setStatutReservation(StatutReservationEnum statutReservation) {
         this.statutReservation = statutReservation;
-    }
-
-    public enum StatutReservationEnum {
-        EN_ATTENTE, VALIDE, REFUSE
     }
 }
