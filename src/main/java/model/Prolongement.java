@@ -22,6 +22,8 @@ public class Prolongement {
 
     private LocalDate dateRetourPrevueApresProlongement;
 
+    private LocalDate dateValidation;
+
     @Enumerated(EnumType.STRING)
     private StatutProlongementEnum statutProlongement;
 
@@ -70,6 +72,14 @@ public class Prolongement {
 
     public void setDateRetourPrevueApresProlongement(LocalDate dateRetourPrevueApresProlongement) {
         this.dateRetourPrevueApresProlongement = dateRetourPrevueApresProlongement;
+    }
+
+    public LocalDate getDateValidation() {
+        return dateValidation;
+    }
+
+    public void setDateValidation(LocalDate dateValidation) {
+        this.dateValidation = dateValidation;
     }
 
     public StatutProlongementEnum getStatutProlongement() {

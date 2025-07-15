@@ -35,15 +35,13 @@
                             <c:choose>
                                 <c:when test="${pretDisplay.prolongement == null && pretDisplay.quotaProlongement > 0}">
                                     <a href="${pageContext.request.contextPath}/frontoffice/formProlongement?idPret=${pretDisplay.pret.idPret}">Demander un prolongement</a>
-                                    <br/>
+                                </c:when>
+                                <c:when test="${pretDisplay.prolongement != null}">
+                                    Statut : ${pretDisplay.statutProlongement}
+                                    <a href="${pageContext.request.contextPath}/frontoffice/detailsProlongement?idProlongement=${pretDisplay.prolongement.idProlongement}">Voir le détail</a>
                                 </c:when>
                                 <c:otherwise>
-                                    Statut : ${pretDisplay.statutProlongement}
-                                    <c:if test="${pretDisplay.prolongement != null}">
-                                        <a href="${pageContext.request.contextPath}/frontoffice/detailsProlongement?idProlongement=${pretDisplay.prolongement.idProlongement}">Voir le détail</a>
-                                    </c:if>
-                                    <br/>
-    
+                                    <span style="color:gray;">Quota de prolongement atteint</span>
                                 </c:otherwise>
                             </c:choose>
                         </td>

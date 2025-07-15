@@ -20,6 +20,8 @@
         <li><a href="${pageContext.request.contextPath}/backoffice/return">Retour des prêts</a></li>
         <li><a href="${pageContext.request.contextPath}/backoffice/reservationsEnAttente">Valider/Refuser les demandes de réservation</a></li>
         <li><a href="${pageContext.request.contextPath}/backoffice/reservationsValidees">Voir les réservations validées</a></li>
+        <li><a href="${pageContext.request.contextPath}/backoffice/prolongements">Valider/Refuser les demandes de prolongement</a></li>
+        <li><a href="${pageContext.request.contextPath}/backoffice/prolongementsValides">Voir les prolongements validés</a></li>
         <li><a href="${pageContext.request.contextPath}/backoffice/penalises">Adhérents pénalisés</a></li>
         <li><a href="${pageContext.request.contextPath}/backoffice/historique">Historique des paiements et états</a></li>
         <li><a href="${pageContext.request.contextPath}/backoffice/pretsEnCours">Prêts en cours</a></li>

@@ -27,11 +27,19 @@
     <c:if test="${not empty error}">
         <p style="color: red;">${error}</p>
     </c:if>
+    <%-- Conversion LocalDate -> java.util.Date pour JSTL --%>
+    <%
+        java.util.Date dateLimiteRecuperationAsDate = null;
+        if (request.getAttribute("dateLimiteRecuperation") != null) {
+            dateLimiteRecuperationAsDate = java.sql.Date.valueOf((java.time.LocalDate)request.getAttribute("dateLimiteRecuperation"));
+            request.setAttribute("dateLimiteRecuperationAsDate", dateLimiteRecuperationAsDate);
+        }
+    %>
     <c:if test="${not empty message}">
         <p style="color: ${isLateValidation ? 'orange' : 'green'};">
             ${message}
             <c:if test="${isLateValidation}">
-                (Date limite de récupération : <fmt:formatDate value="${dateLimiteRecuperation}" pattern="yyyy-MM-dd"/>)
+                (Date limite de récupération : <fmt:formatDate value="${dateLimiteRecuperationAsDate}" pattern="yyyy-MM-dd"/>)
             </c:if>
         </p>
     </c:if>
