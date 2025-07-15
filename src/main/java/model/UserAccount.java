@@ -3,28 +3,29 @@ package model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "UserAccount")
 public class UserAccount {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idUserAccount")
     private Integer idUserAccount;
 
     @OneToOne
-    @JoinColumn(name = "idPersonne", referencedColumnName = "idPersonne")
+    @JoinColumn(name = "idPersonne")
     private Personne personne;
 
-    @Column(name = "login", nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String login;
 
-    @Column(name = "motDePasse", nullable = false)
+    @Column(nullable = false)
     private String motDePasse;
 
-    @Column(name = "role", nullable = false)
+    @Column(nullable = false)
     private String role;
 
-    // Getters and Setters
+    @OneToOne(mappedBy = "userAccount")
+    private Adherent adherent;
+
+    // Getters and setters
     public Integer getIdUserAccount() {
         return idUserAccount;
     }
@@ -63,5 +64,13 @@ public class UserAccount {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public Adherent getAdherent() {
+        return adherent;
+    }
+
+    public void setAdherent(Adherent adherent) {
+        this.adherent = adherent;
     }
 }

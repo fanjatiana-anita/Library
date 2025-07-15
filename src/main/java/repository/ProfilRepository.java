@@ -1,7 +1,7 @@
 package repository;
 
-     import model.Profil;
-     import org.springframework.data.jpa.repository.JpaRepository;
+import model.Profil;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-     public interface ProfilRepository extends JpaRepository<Profil, Integer> {
-     }
+public interface ProfilRepository extends JpaRepository<Profil, Integer> {
+}

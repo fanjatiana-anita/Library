@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Formulaire de réservation</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
     <script>
         function validateDates() {
             const dateReservation = new Date(document.getElementById("dateReservation").value);
@@ -17,7 +18,11 @@
 </head>
 <body>
     <h1>Réserver un exemplaire</h1>
+    <c:if test="${not empty error}">
+        <p style="color: red;">${error}</p>
+    </c:if>
     <form action="${pageContext.request.contextPath}/frontoffice/processReservation" method="post" onsubmit="return validateDates()">
+        <input type="hidden" name="idLivre" value="${idLivre}"/>
         <input type="hidden" name="idExemplaire" value="${idExemplaire}"/>
         <label>Date de réservation :</label>
         <input type="date" id="dateReservation" name="dateReservation" value="${dateReservation}" required/><br/>

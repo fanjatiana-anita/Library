@@ -14,4 +14,6 @@ public interface PretRepository extends JpaRepository<Pret, Integer> {
     List<Pret> findByAdherentAndDateDeRetourReelleIsNull(Adherent adherent);
     List<Pret> findByAdherentAndDateDeRetourReelleIsNullAndDateDeRetourPrevueBefore(Adherent adherent, LocalDate date);
     Pret findByAdherentAndExemplaireAndDateDeRetourReelleIsNull(Adherent adherent, Exemplaire exemplaire);
+    List<Pret> findByDateDeRetourReelleIsNull();
+    Pret findByAdherentAndExemplaireAndDateDuPret(Adherent adherent, Exemplaire exemplaire, LocalDate dateDuPret);
 }

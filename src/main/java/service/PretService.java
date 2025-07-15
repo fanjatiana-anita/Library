@@ -94,7 +94,7 @@ public class PretService {
     }
 
     @Transactional
-    public PretResult createPret(String login, Integer idExemplaire, String adjustDirection) {
+    public PretResult createPret(String login, Integer idExemplaire, LocalDate datePret, LocalDate dateDeRetourPrevue, String adjustDirection) {
         Adherent adherent = adherentRepository.findByUserAccountLogin(login);
         if (adherent == null) {
             return new PretResult(null, "Aucun adhérent trouvé avec ce login.", null, null);
@@ -122,8 +122,9 @@ public class PretService {
         if (exemplaire == null) {
             return new PretResult(null, "L'exemplaire n'existe pas.", null, null);
         }
-        if (!Exemplaire.StatutExemplaireEnum.DISPONIBLE.equals(exemplaire.getStatutExemplaire())) {
-            return new PretResult(null, "L'exemplaire n'est pas disponible.", null, null);
+        if (!(Exemplaire.StatutExemplaireEnum.DISPONIBLE.equals(exemplaire.getStatutExemplaire()) ||
+              Exemplaire.StatutExemplaireEnum.RESERVE.equals(exemplaire.getStatutExemplaire()))) {
+            return new PretResult(null, "L'exemplaire n'est ni disponible ni réservé.", null, null);
         }
 
         // Vérification des restrictions
@@ -153,24 +154,34 @@ public class PretService {
             return new PretResult(null, "L'adhérent n'a pas le droit d'accéder à cet exemplaire.", null, null);
         }
 
-        LocalDate dateDuPret = LocalDate.now();
-        LocalDate dateDeRetourPrevue = dateDuPret.plusDays(adherent.getProfil().getDureeMaxPret());
-        LocalDate originalDateDeRetourPrevue = dateDeRetourPrevue;
+        // Validation de datePret : ne doit pas être antérieure à la date d'adhésion
+        if (datePret.isBefore(adherent.getDateAdhesion())) {
+            return new PretResult(null, "La date du prêt ne peut pas être antérieure à la date d'adhésion (" + adherent.getDateAdhesion() + ").", null, null);
+        }
+
+        // Définir dateDeRetourPrevue si non fournie
+        LocalDate calculatedDateDeRetourPrevue = dateDeRetourPrevue != null ? dateDeRetourPrevue : datePret.plusDays(adherent.getProfil().getDureeMaxPret());
+        LocalDate originalDateDeRetourPrevue = calculatedDateDeRetourPrevue;
+
+        // Vérification de la contrainte dateDeRetourPrevue > datePret
+        if (!calculatedDateDeRetourPrevue.isAfter(datePret)) {
+            return new PretResult(null, "La date de retour prévue doit être postérieure à la date du prêt.", null, null);
+        }
 
         List<JourNonOuvrable> joursNonOuvrables = jourNonOuvrableRepository.findAll();
         String message = null;
-        if (isNonWorkingDay(dateDeRetourPrevue, joursNonOuvrables)) {
+        if (isNonWorkingDay(calculatedDateDeRetourPrevue, joursNonOuvrables)) {
             AdjustDirection direction = adjustDirection != null ? AdjustDirection.valueOf(adjustDirection.toUpperCase()) : AdjustDirection.FORWARD;
-            dateDeRetourPrevue = adjustDate(dateDeRetourPrevue, joursNonOuvrables, direction);
+            calculatedDateDeRetourPrevue = adjustDate(calculatedDateDeRetourPrevue, joursNonOuvrables, direction);
             message = String.format("La date de retour prévue initiale (%s) était un jour non ouvrable. Elle a été ajustée à %s.", 
-                                   originalDateDeRetourPrevue, dateDeRetourPrevue);
+                                   originalDateDeRetourPrevue, calculatedDateDeRetourPrevue);
         }
 
         Pret pret = new Pret();
         pret.setAdherent(adherent);
         pret.setExemplaire(exemplaire);
-        pret.setDateDuPret(dateDuPret);
-        pret.setDateDeRetourPrevue(dateDeRetourPrevue);
+        pret.setDateDuPret(datePret);
+        pret.setDateDeRetourPrevue(calculatedDateDeRetourPrevue);
         pretRepository.save(pret);
 
         exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.EN_PRET);
@@ -179,12 +190,12 @@ public class PretService {
         HistoriqueEtat historiqueEtat = new HistoriqueEtat();
         historiqueEtat.setEntite("PRET");
         historiqueEtat.setIdEntite(pret.getIdPret());
-        historiqueEtat.setEtatAvant(Exemplaire.StatutExemplaireEnum.DISPONIBLE.toString());
+        historiqueEtat.setEtatAvant(exemplaire.getStatutExemplaire().toString());
         historiqueEtat.setEtatApres(Exemplaire.StatutExemplaireEnum.EN_PRET.toString());
         historiqueEtat.setDateChangement(LocalDateTime.now());
         historiqueEtatRepository.save(historiqueEtat);
 
-        return new PretResult(pret, message, originalDateDeRetourPrevue, dateDeRetourPrevue);
+        return new PretResult(pret, message != null ? message : "Prêt créé avec succès.", originalDateDeRetourPrevue, calculatedDateDeRetourPrevue);
     }
 
     @Transactional
@@ -237,7 +248,7 @@ public class PretService {
             message = String.format("L'adhérent a été pénalisé jusqu'au %s pour retard de retour.", dateFinPenalisation);
         }
 
-        return new ReturnResult(pret, message);
+        return new ReturnResult(pret, message != null ? message : "Prêt retourné avec succès.");
     }
 
     public Integer findAvailableExemplaire(Integer idLivre) {
@@ -245,6 +256,11 @@ public class PretService {
                 .filter(e -> e.getLivre().getIdLivre().equals(idLivre) && e.getStatutExemplaire() == Exemplaire.StatutExemplaireEnum.DISPONIBLE)
                 .toList();
         return exemplaires.isEmpty() ? null : exemplaires.get(0).getIdExemplaire();
+    }
+
+    public boolean isQuotaPretAvailable(Adherent adherent) {
+        List<Pret> pretsActifs = pretRepository.findByAdherentAndDateDeRetourReelleIsNull(adherent);
+        return pretsActifs.size() < adherent.getProfil().getQuotaMaxPret();
     }
 
     private LocalDate adjustDate(LocalDate date, List<JourNonOuvrable> joursNonOuvrables, AdjustDirection direction) {

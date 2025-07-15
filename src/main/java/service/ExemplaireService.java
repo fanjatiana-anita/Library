@@ -14,4 +14,9 @@ public class ExemplaireService {
     public Exemplaire findById(Integer id) {
         return exemplaireRepository.findById(id).orElse(null);
     }
+
+    public boolean isExemplaireDisponible(Integer idExemplaire) {
+        Exemplaire exemplaire = exemplaireRepository.findById(idExemplaire).orElse(null);
+        return exemplaire != null && Exemplaire.StatutExemplaireEnum.DISPONIBLE.equals(exemplaire.getStatutExemplaire());
+    }
 }

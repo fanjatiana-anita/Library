@@ -23,4 +23,8 @@ public class AdherentService {
     public Adherent findByUserAccount(UserAccount userAccount) {
         return adherentRepository.findByUserAccount(userAccount);
     }
+
+    public boolean isAdherentActif(Adherent adherent) {
+        return Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent());
+    }
 }

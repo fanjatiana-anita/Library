@@ -1,39 +1,93 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <html>
 <head>
     <title>Mes Réservations</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+        .late {
+            color: orange;
+        }
+    </style>
 </head>
 <body>
-    <h1>Mes Réservations</h1>
-    <c:if test="${not empty error}">
-        <p style="color: red;">${error}</p>
-    </c:if>
-    <c:if test="${empty reservations}">
-        <p>Aucune réservation trouvée.</p>
-    </c:if>
-    <c:if test="${not empty reservations}">
-        <table border="1">
+<h2>Mes Réservations</h2>
+
+<c:choose>
+    <c:when test="${empty user}">
+        <p class="error">Vous devez être connecté pour voir vos réservations.</p>
+        <a href="${pageContext.request.contextPath}/login">Se connecter</a>
+    </c:when>
+    <c:otherwise>
+        <p>Bienvenue, ${user.personne.nomPersonne} (${user.login})</p>
+        <c:if test="${not empty error}">
+            <p class="error">${error}</p>
+        </c:if>
+        <c:if test="${not empty message}">
+            <p class="success">${message}</p>
+        </c:if>
+        <table>
             <tr>
-                <th>ID Réservation</th>
-                <th>Titre du livre</th>
+                <th>Livre</th>
                 <th>Date de réservation</th>
-                <th>Date du prêt prévu</th>
+                <th>Date prévue du prêt</th>
                 <th>Statut</th>
-                <th>Action</th>
+                <th>Informations</th>
             </tr>
-            <c:forEach var="reservation" items="${reservations}">
+            <c:forEach var="reservationMap" items="${reservations}">
+                <c:set var="reservation" value="${reservationMap.reservation}"/>
                 <tr>
-                    <td>${reservation.idReservation}</td>
                     <td>${reservation.exemplaire.livre.titreLivre}</td>
-                    <td>${reservation.dateDeReservation}</td>
-                    <td>${reservation.dateDuPretPrevue}</td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty reservationMap.dateDeReservationAsDate}">
+                                <fmt:formatDate value="${reservationMap.dateDeReservationAsDate}" pattern="yyyy-MM-dd"/>
+                            </c:when>
+                            <c:otherwise>Non définie</c:otherwise>
+                        </c:choose>
+                    </td>
+                    <td>
+                        <c:choose>
+                            <c:when test="${not empty reservationMap.dateDuPretPrevueAsDate}">
+                                <fmt:formatDate value="${reservationMap.dateDuPretPrevueAsDate}" pattern="yyyy-MM-dd"/>
+                            </c:when>
+                            <c:otherwise>Non définie</c:otherwise>
+                        </c:choose>
+                    </td>
                     <td>${reservation.statutReservation}</td>
-                    <td><a href="${pageContext.request.contextPath}/frontoffice/detailsReservation?idReservation=${reservation.idReservation}">Voir détails</a></td>
+                    <td>
+                        <c:if test="${reservation.isLateValidation}">
+                            <span class="late">Validation en retard. Récupérez avant le
+                                <fmt:formatDate value="${reservationMap.dateLimiteRecuperationAsDate}" pattern="yyyy-MM-dd"/>
+                            </span>
+                        </c:if>
+                    </td>
                 </tr>
             </c:forEach>
         </table>
-    </c:if>
-    <p><a href="${pageContext.request.contextPath}/frontoffice/accueil">Retour à l'accueil</a></p>
+        <br>
+        <a href="${pageContext.request.contextPath}/frontoffice/reservations">Faire une nouvelle réservation</a><br>
+        <a href="${pageContext.request.contextPath}/frontoffice/accueil">Retour à l'accueil</a>
+    </c:otherwise>
+</c:choose>
 </body>
 </html>

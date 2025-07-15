@@ -2,39 +2,48 @@ package model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.Date;
 
 @Entity
-@Table(name = "Reservation")
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idReservation")
     private Integer idReservation;
 
     @ManyToOne
-    @JoinColumn(name = "idAdherent", referencedColumnName = "idAdherent")
+    @JoinColumn(name = "idAdherent", nullable = false)
     private Adherent adherent;
 
     @ManyToOne
-    @JoinColumn(name = "idExemplaire", referencedColumnName = "idExemplaire")
+    @JoinColumn(name = "idExemplaire", nullable = false)
     private Exemplaire exemplaire;
 
-    @Column(name = "dateDeReservation")
+    @Column(nullable = false)
     private LocalDate dateDeReservation;
 
-    @Column(name = "dateDuPretPrevue")
+    @Column(nullable = false)
     private LocalDate dateDuPretPrevue;
 
+    private LocalDate dateValidation;
+
+    private LocalDate dateLimiteRecuperation;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "statutReservation")
+    @Column(nullable = false)
     private StatutReservationEnum statutReservation;
 
+    @Transient
+    private boolean isLateValidation;
+
+    @Transient
+    private Date dateLimiteRecuperationAsDate;
+
     public enum StatutReservationEnum {
-        EN_ATTENTE, VALIDE, REFUSE
+        EN_ATTENTE, VALIDE, REFUSEE, EXPIREE, COMPLETEE
     }
 
-    // Getters and Setters
+    // Getters and setters
     public Integer getIdReservation() {
         return idReservation;
     }
@@ -75,11 +84,43 @@ public class Reservation {
         this.dateDuPretPrevue = dateDuPretPrevue;
     }
 
+    public LocalDate getDateValidation() {
+        return dateValidation;
+    }
+
+    public void setDateValidation(LocalDate dateValidation) {
+        this.dateValidation = dateValidation;
+    }
+
+    public LocalDate getDateLimiteRecuperation() {
+        return dateLimiteRecuperation;
+    }
+
+    public void setDateLimiteRecuperation(LocalDate dateLimiteRecuperation) {
+        this.dateLimiteRecuperation = dateLimiteRecuperation;
+    }
+
     public StatutReservationEnum getStatutReservation() {
         return statutReservation;
     }
 
     public void setStatutReservation(StatutReservationEnum statutReservation) {
         this.statutReservation = statutReservation;
+    }
+
+    public boolean getIsLateValidation() {
+        return isLateValidation;
+    }
+
+    public void setLateValidation(boolean lateValidation) {
+        this.isLateValidation = lateValidation;
+    }
+
+    public Date getDateLimiteRecuperationAsDate() {
+        return dateLimiteRecuperationAsDate;
+    }
+
+    public void setDateLimiteRecuperationAsDate(Date dateLimiteRecuperationAsDate) {
+        this.dateLimiteRecuperationAsDate = dateLimiteRecuperationAsDate;
     }
 }
