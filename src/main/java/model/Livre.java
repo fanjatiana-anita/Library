@@ -1,6 +1,8 @@
 package model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
 
 @Entity
 @Table(name = "Livre")
@@ -17,6 +19,10 @@ public class Livre {
     @ManyToOne
     @JoinColumn(name = "idAuteur", referencedColumnName = "idAuteur")
     private Auteur auteur;
+
+    @OneToMany(mappedBy = "livre")
+    @JsonIgnore
+    private List<Exemplaire> exemplaires;
 
     // Getters and Setters
     public Integer getIdLivre() {
@@ -41,5 +47,13 @@ public class Livre {
 
     public void setAuteur(Auteur auteur) {
         this.auteur = auteur;
+    }
+
+    public List<Exemplaire> getExemplaires() {
+        return exemplaires;
+    }
+
+    public void setExemplaires(List<Exemplaire> exemplaires) {
+        this.exemplaires = exemplaires;
     }
 }

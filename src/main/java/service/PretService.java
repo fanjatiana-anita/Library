@@ -4,13 +4,7 @@ import model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import repository.AdherentRepository;
-import repository.ExemplaireRepository;
-import repository.JourNonOuvrableRepository;
-import repository.PenalisationRepository;
-import repository.PretRepository;
-import repository.RestrictionProfilLivreRepository;
-import repository.HistoriqueEtatRepository;
+import repository.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,6 +34,12 @@ public class PretService {
 
     @Autowired
     private HistoriqueEtatRepository historiqueEtatRepository;
+
+    @Autowired
+    private ReservationRepository reservationRepository;
+
+    @Autowired
+    private ProlongementRepository prolongementRepository;
 
     public static class PretResult {
         private Pret pret;
@@ -82,6 +82,24 @@ public class PretService {
 
         public Pret getPret() {
             return pret;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+    }
+
+    public static class ProlongementResult {
+        private Prolongement prolongement;
+        private String message;
+
+        public ProlongementResult(Prolongement prolongement, String message) {
+            this.prolongement = prolongement;
+            this.message = message;
+        }
+
+        public Prolongement getProlongement() {
+            return prolongement;
         }
 
         public String getMessage() {
@@ -134,16 +152,15 @@ public class PretService {
         int age = Period.between(dateNaissance, LocalDate.now()).getYears();
 
         if (restrictions.isEmpty()) {
-            isAllowed = true; // Pas de restrictions : le prêt est autorisé
+            isAllowed = true;
         } else {
             for (RestrictionProfilLivre restriction : restrictions) {
                 if (restriction.getIdProfil() != null && restriction.getIdProfil().equals(adherent.getProfil().getIdProfil())) {
-                    // Restriction trouvée pour le profil de l'adhérent
                     if (restriction.getAgeMinRequis() == null || age >= restriction.getAgeMinRequis()) {
-                        isAllowed = true; // Âge suffisant ou pas de restriction d'âge
+                        isAllowed = true;
                         break;
                     } else {
-                        return new PretResult(null, "L'adhérent est trop jeune pour accéder à cet exemplaire (âge minimum requis : " + 
+                        return new PretResult(null, "L'adhérent est trop jeune pour accéder à cet exemplaire (âge minimum requis : " +
                             restriction.getAgeMinRequis() + " ans).", null, null);
                     }
                 }
@@ -154,7 +171,7 @@ public class PretService {
             return new PretResult(null, "L'adhérent n'a pas le droit d'accéder à cet exemplaire.", null, null);
         }
 
-        // Validation de datePret : ne doit pas être antérieure à la date d'adhésion
+        // Validation de datePret
         if (datePret.isBefore(adherent.getDateAdhesion())) {
             return new PretResult(null, "La date du prêt ne peut pas être antérieure à la date d'adhésion (" + adherent.getDateAdhesion() + ").", null, null);
         }
@@ -173,7 +190,7 @@ public class PretService {
         if (isNonWorkingDay(calculatedDateDeRetourPrevue, joursNonOuvrables)) {
             AdjustDirection direction = adjustDirection != null ? AdjustDirection.valueOf(adjustDirection.toUpperCase()) : AdjustDirection.FORWARD;
             calculatedDateDeRetourPrevue = adjustDate(calculatedDateDeRetourPrevue, joursNonOuvrables, direction);
-            message = String.format("La date de retour prévue initiale (%s) était un jour non ouvrable. Elle a été ajustée à %s.", 
+            message = String.format("La date de retour prévue initiale (%s) était un jour non ouvrable. Elle a été ajustée à %s.",
                                    originalDateDeRetourPrevue, calculatedDateDeRetourPrevue);
         }
 
@@ -182,6 +199,7 @@ public class PretService {
         pret.setExemplaire(exemplaire);
         pret.setDateDuPret(datePret);
         pret.setDateDeRetourPrevue(calculatedDateDeRetourPrevue);
+        pret.setNombreProlongement(0);
         pretRepository.save(pret);
 
         exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.EN_PRET);
@@ -249,6 +267,93 @@ public class PretService {
         }
 
         return new ReturnResult(pret, message != null ? message : "Prêt retourné avec succès.");
+    }
+
+    @Transactional
+    public ProlongementResult requestProlongement(String login, Integer idPret, LocalDate dateDemandeProlongement, LocalDate dateRetourPrevueApresProlongement) {
+        Adherent adherent = adherentRepository.findByUserAccountLogin(login);
+        if (adherent == null) {
+            return new ProlongementResult(null, "Aucun adhérent trouvé avec ce login.");
+        }
+        if (!Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent())) {
+            return new ProlongementResult(null, "L'adhérent n'est pas actif.");
+        }
+
+        Pret pret = pretRepository.findById(idPret).orElse(null);
+        if (pret == null) {
+            return new ProlongementResult(null, "Prêt non trouvé.");
+        }
+        if (pret.getDateDeRetourReelle() != null) {
+            return new ProlongementResult(null, "Ce prêt a déjà été retourné.");
+        }
+        if (!pret.getAdherent().equals(adherent)) {
+            return new ProlongementResult(null, "Ce prêt n'appartient pas à cet adhérent.");
+        }
+
+        // Vérifier si l'adhérent est pénalisé
+        if (!penalisationRepository.findByAdherentAndDateFinPenalisationAfter(adherent, LocalDate.now()).isEmpty()) {
+            return new ProlongementResult(null, "L'adhérent est actuellement pénalisé.");
+        }
+
+        // Vérifier le quota de prolongements
+        if (pret.getNombreProlongement() >= adherent.getProfil().getQuotaMaxProlongement()) {
+            return new ProlongementResult(null, "Quota maximum de prolongements atteint.");
+        }
+
+        // Vérifier si une demande de prolongement est déjà en attente
+        List<Prolongement> prolongementsEnAttente = prolongementRepository.findByPretAndStatutProlongement(
+                pret, Prolongement.StatutProlongementEnum.EN_ATTENTE);
+        if (!prolongementsEnAttente.isEmpty()) {
+            return new ProlongementResult(null, "Une demande de prolongement est déjà en attente pour ce prêt.");
+        }
+
+        // Vérifier la disponibilité de l'exemplaire
+        List<Reservation> reservations = reservationRepository.findByExemplaireAndStatutReservation(
+                pret.getExemplaire(), Reservation.StatutReservationEnum.EN_ATTENTE);
+        for (Reservation reservation : reservations) {
+            if (reservation.getDateDuPretPrevue().isBefore(pret.getDateDeRetourPrevue().plusDays(1))) {
+                return new ProlongementResult(null, "Une réservation est prévue pour cet exemplaire avant la fin du prêt.");
+            }
+        }
+
+        // Vérifier la date de demande de prolongement
+        if (dateDemandeProlongement.isAfter(pret.getDateDeRetourPrevue())) {
+            return new ProlongementResult(null, "La date de demande de prolongement doit être antérieure ou égale à la date de retour prévue.");
+        }
+
+        // Calculer la nouvelle date de retour si non fournie
+        LocalDate nouvelleDateRetour = dateRetourPrevueApresProlongement != null
+                ? dateRetourPrevueApresProlongement
+                : pret.getDateDeRetourPrevue().plusDays(adherent.getProfil().getDureeMaxPret());
+
+        // Vérifier que la nouvelle date de retour est postérieure à l'ancienne
+        if (nouvelleDateRetour.isBefore(pret.getDateDeRetourPrevue()) || nouvelleDateRetour.equals(pret.getDateDeRetourPrevue())) {
+            return new ProlongementResult(null, "La nouvelle date de retour doit être postérieure à la date de retour actuelle.");
+        }
+
+        // Ajuster la date pour éviter les jours non ouvrables
+        List<JourNonOuvrable> joursNonOuvrables = jourNonOuvrableRepository.findAll();
+        if (isNonWorkingDay(nouvelleDateRetour, joursNonOuvrables)) {
+            nouvelleDateRetour = adjustDate(nouvelleDateRetour, joursNonOuvrables, AdjustDirection.FORWARD);
+        }
+
+        Prolongement prolongement = new Prolongement();
+        prolongement.setPret(pret);
+        prolongement.setAdherent(adherent);
+        prolongement.setDateDemandeProlongement(dateDemandeProlongement);
+        prolongement.setDateRetourPrevueApresProlongement(nouvelleDateRetour);
+        prolongement.setStatutProlongement(Prolongement.StatutProlongementEnum.EN_ATTENTE);
+        prolongementRepository.save(prolongement);
+
+        HistoriqueEtat historiqueEtat = new HistoriqueEtat();
+        historiqueEtat.setEntite("PROLONGEMENT");
+        historiqueEtat.setIdEntite(prolongement.getIdProlongement());
+        historiqueEtat.setEtatAvant("AUCUN");
+        historiqueEtat.setEtatApres(Prolongement.StatutProlongementEnum.EN_ATTENTE.toString());
+        historiqueEtat.setDateChangement(LocalDateTime.now());
+        historiqueEtatRepository.save(historiqueEtat);
+
+        return new ProlongementResult(prolongement, "Demande de prolongement créée avec succès.");
     }
 
     public Integer findAvailableExemplaire(Integer idLivre) {

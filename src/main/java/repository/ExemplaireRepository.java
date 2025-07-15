@@ -5,7 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ExemplaireRepository extends JpaRepository<Exemplaire, Integer> {
-    List<Exemplaire> findByLivreIdLivre(Integer idLivre);
+    List<Exemplaire> findByLivre_IdLivre(Integer idLivre);
 }
-
-

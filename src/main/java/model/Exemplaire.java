@@ -1,5 +1,6 @@
 package model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -23,6 +24,19 @@ public class Exemplaire {
         DISPONIBLE, RESERVE, EN_PRET
     }
 
+    @Transient
+    @JsonProperty("livreId")
+    public Integer getLivreId() {
+        return livre != null ? livre.getIdLivre() : null;
+    }
+
+    @Transient
+    @JsonProperty("titreLivre")
+    public String getTitreLivre() {
+        return livre != null ? livre.getTitreLivre() : null;
+    }
+
+    // Getters and Setters
     public Integer getIdExemplaire() {
         return idExemplaire;
     }
