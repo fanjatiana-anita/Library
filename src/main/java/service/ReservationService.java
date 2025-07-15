@@ -8,11 +8,14 @@ import repository.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period;
+import java.util.Collections;
 import java.util.List;
 
 @Service
 public class ReservationService {
+
+    @Autowired
+    private ReservationRepository reservationRepository;
 
     @Autowired
     private AdherentRepository adherentRepository;
@@ -21,13 +24,7 @@ public class ReservationService {
     private ExemplaireRepository exemplaireRepository;
 
     @Autowired
-    private ReservationRepository reservationRepository;
-
-    @Autowired
-    private PenalisationRepository penalisationRepository;
-
-    @Autowired
-    private RestrictionProfilLivreRepository restrictionProfilLivreRepository;
+    private PretService pretService;
 
     @Autowired
     private HistoriqueEtatRepository historiqueEtatRepository;
@@ -35,10 +32,14 @@ public class ReservationService {
     public static class ReservationResult {
         private Reservation reservation;
         private String message;
+        private boolean isLateValidation;
+        private LocalDate dateLimiteRecuperation;
 
-        public ReservationResult(Reservation reservation, String message) {
+        public ReservationResult(Reservation reservation, String message, boolean isLateValidation, LocalDate dateLimiteRecuperation) {
             this.reservation = reservation;
             this.message = message;
+            this.isLateValidation = isLateValidation;
+            this.dateLimiteRecuperation = dateLimiteRecuperation;
         }
 
         public Reservation getReservation() {
@@ -48,116 +49,190 @@ public class ReservationService {
         public String getMessage() {
             return message;
         }
+
+        public boolean isLateValidation() {
+            return isLateValidation;
+        }
+
+        public LocalDate getDateLimiteRecuperation() {
+            return dateLimiteRecuperation;
+        }
     }
 
     @Transactional
-    public ReservationResult createReservation(String login, Integer idExemplaire, LocalDate dateReservation, LocalDate datePretPrevue) {
-        // Vérifier l'adhérent
+    public ReservationResult createReservation(String login, Integer idLivre, LocalDate dateDeReservation, LocalDate dateDuPretPrevue) {
         Adherent adherent = adherentRepository.findByUserAccountLogin(login);
         if (adherent == null) {
-            return new ReservationResult(null, "Aucun adhérent trouvé avec ce login.");
+            return new ReservationResult(null, "Aucun adhérent trouvé avec ce login.", false, null);
         }
         if (!Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent())) {
-            return new ReservationResult(null, "L'adhérent n'est pas actif.");
+            return new ReservationResult(null, "L'adhérent n'est pas actif.", false, null);
         }
 
-        // Vérifier les pénalisations
-        List<Penalisation> penalites = penalisationRepository.findByAdherentAndDateFinPenalisationAfter(adherent, LocalDate.now());
-        if (!penalites.isEmpty()) {
-            return new ReservationResult(null, "L'adhérent est sous sanction.");
+        if (!pretService.isQuotaPretAvailable(adherent)) {
+            return new ReservationResult(null, "Quota maximum de prêts atteint.", false, null);
         }
 
-        // Vérifier le quota de réservations
-        List<Reservation> reservationsActives = reservationRepository.findByAdherentAndStatutReservationIn(
-            adherent, List.of(Reservation.StatutReservationEnum.EN_ATTENTE, Reservation.StatutReservationEnum.VALIDE));
-        if (reservationsActives.size() >= adherent.getProfil().getQuotaMaxReservation()) {
-            return new ReservationResult(null, "Quota maximum de réservations atteint.");
+        Integer idExemplaire = pretService.findAvailableExemplaire(idLivre);
+        if (idExemplaire == null) {
+            return new ReservationResult(null, "Aucun exemplaire disponible pour ce livre.", false, null);
         }
 
-        // Vérifier l'exemplaire
         Exemplaire exemplaire = exemplaireRepository.findById(idExemplaire).orElse(null);
         if (exemplaire == null) {
-            return new ReservationResult(null, "L'exemplaire n'existe pas.");
-        }
-        if (!Exemplaire.StatutExemplaireEnum.DISPONIBLE.equals(exemplaire.getStatutExemplaire())) {
-            return new ReservationResult(null, "L'exemplaire n'est pas disponible.");
+            return new ReservationResult(null, "L'exemplaire n'existe pas.", false, null);
         }
 
-        // Vérifier si l'exemplaire est déjà réservé avec statut VALIDE
-        List<Reservation> reservationsValides = reservationRepository.findByExemplaireAndStatutReservation(
-            exemplaire, Reservation.StatutReservationEnum.VALIDE);
-        if (!reservationsValides.isEmpty()) {
-            return new ReservationResult(null, "L'exemplaire est déjà réservé.");
+        List<Reservation> reservationsActives = reservationRepository.findByAdherentAndStatutReservationIn(
+                adherent, Collections.singletonList(Reservation.StatutReservationEnum.EN_ATTENTE));
+        if (!reservationsActives.isEmpty()) {
+            return new ReservationResult(null, "L'adhérent a déjà une réservation en attente.", false, null);
         }
 
-        // Vérifier les restrictions (profil et âge)
-        List<RestrictionProfilLivre> restrictions = restrictionProfilLivreRepository.findByLivre(exemplaire.getLivre());
-        boolean isAllowed = false;
-        int age = Period.between(adherent.getUserAccount().getPersonne().getDateDeNaissance(), LocalDate.now()).getYears();
-        if (restrictions.isEmpty()) {
-            isAllowed = true;
-        } else {
-            for (RestrictionProfilLivre restriction : restrictions) {
-                if (restriction.getIdProfil() != null && restriction.getIdProfil().equals(adherent.getProfil().getIdProfil())) {
-                    if (restriction.getAgeMinRequis() == null || age >= restriction.getAgeMinRequis()) {
-                        isAllowed = true;
-                        break;
-                    } else {
-                        return new ReservationResult(null, "L'adhérent est trop jeune pour réserver cet exemplaire (âge minimum requis : " + 
-                            restriction.getAgeMinRequis() + " ans).");
-                    }
-                }
-            }
-        }
-        if (!isAllowed) {
-            return new ReservationResult(null, "L'adhérent n'a pas le droit de réserver cet exemplaire.");
+        reservationsActives = reservationRepository.findByAdherentAndStatutReservationIn(
+                adherent, Collections.singletonList(Reservation.StatutReservationEnum.VALIDE));
+        if (!reservationsActives.isEmpty()) {
+            return new ReservationResult(null, "L'adhérent a déjà une réservation validée.", false, null);
         }
 
-        // Vérifier les dates
-        if (datePretPrevue.isBefore(dateReservation)) {
-            return new ReservationResult(null, "La date du prêt prévu doit être postérieure ou égale à la date de réservation.");
+        if (dateDuPretPrevue.isBefore(dateDeReservation)) {
+            return new ReservationResult(null, "La date de prêt prévue doit être postérieure ou égale à la date de réservation.", false, null);
         }
 
-        // Créer la réservation
         Reservation reservation = new Reservation();
         reservation.setAdherent(adherent);
         reservation.setExemplaire(exemplaire);
-        reservation.setDateDeReservation(dateReservation);
-        reservation.setDateDuPretPrevue(datePretPrevue);
+        reservation.setDateDeReservation(dateDeReservation);
+        reservation.setDateDuPretPrevue(dateDuPretPrevue);
         reservation.setStatutReservation(Reservation.StatutReservationEnum.EN_ATTENTE);
         reservationRepository.save(reservation);
 
-        // Enregistrer dans HistoriqueEtat
-        HistoriqueEtat historique = new HistoriqueEtat();
-        historique.setEntite("RESERVATION");
-        historique.setIdEntite(reservation.getIdReservation());
-        historique.setEtatAvant(null);
-        historique.setEtatApres(Reservation.StatutReservationEnum.EN_ATTENTE.toString());
-        historique.setDateChangement(LocalDateTime.now());
-        historiqueEtatRepository.save(historique);
+        exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.RESERVE);
+        exemplaireRepository.save(exemplaire);
 
-        return new ReservationResult(reservation, "Réservation enregistrée avec succès.");
+        HistoriqueEtat historiqueEtat = new HistoriqueEtat();
+        historiqueEtat.setEntite("RESERVATION");
+        historiqueEtat.setIdEntite(reservation.getIdReservation());
+        historiqueEtat.setEtatAvant("DISPONIBLE");
+        historiqueEtat.setEtatApres(Exemplaire.StatutExemplaireEnum.RESERVE.toString());
+        historiqueEtat.setDateChangement(LocalDateTime.now());
+        historiqueEtatRepository.save(historiqueEtat);
+
+        return new ReservationResult(reservation, "Réservation créée avec succès.", false, null);
     }
 
-    public Integer findAvailableExemplaire(Integer idLivre) {
-        List<Exemplaire> exemplaires = exemplaireRepository.findAll().stream()
-                .filter(e -> e.getLivre().getIdLivre().equals(idLivre) 
-                    && e.getStatutExemplaire() == Exemplaire.StatutExemplaireEnum.DISPONIBLE
-                    && reservationRepository.findByExemplaireAndStatutReservation(
-                        e, Reservation.StatutReservationEnum.VALIDE).isEmpty())
-                .toList();
-        return exemplaires.isEmpty() ? null : exemplaires.get(0).getIdExemplaire();
+    @Transactional
+    public ReservationResult validerReservation(Integer idReservation, LocalDate dateValidation) {
+        Reservation reservation = reservationRepository.findById(idReservation).orElse(null);
+        if (reservation == null) {
+            return new ReservationResult(null, "Réservation non trouvée.", false, null);
+        }
+        if (reservation.getStatutReservation() != Reservation.StatutReservationEnum.EN_ATTENTE) {
+            return new ReservationResult(null, "La réservation n'est pas en attente.", false, null);
+        }
+
+        Adherent adherent = reservation.getAdherent();
+        if (!Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent())) {
+            return new ReservationResult(null, "L'adhérent n'est pas actif.", false, null);
+        }
+
+        LocalDate dateLimiteRecuperation = dateValidation.plusDays(adherent.getProfil().getDelaiSupplementaireReservation());
+        boolean isLateValidation = dateValidation.isAfter(reservation.getDateDuPretPrevue());
+
+        reservation.setStatutReservation(Reservation.StatutReservationEnum.VALIDE);
+        reservation.setDateValidation(dateValidation);
+        reservation.setDateLimiteRecuperation(dateLimiteRecuperation);
+        reservationRepository.save(reservation);
+
+        String message = isLateValidation
+                ? String.format("Réservation validée avec succès, mais en retard. Nouvelle date limite de récupération : %s.", dateLimiteRecuperation)
+                : "Réservation validée avec succès.";
+
+        return new ReservationResult(reservation, message, isLateValidation, dateLimiteRecuperation);
+    }
+
+    @Transactional
+    public ReservationResult refuserReservation(Integer idReservation) {
+        Reservation reservation = reservationRepository.findById(idReservation).orElse(null);
+        if (reservation == null) {
+            return new ReservationResult(null, "Réservation non trouvée.", false, null);
+        }
+        if (reservation.getStatutReservation() != Reservation.StatutReservationEnum.EN_ATTENTE) {
+            return new ReservationResult(null, "La réservation n'est pas en attente.", false, null);
+        }
+
+        Exemplaire exemplaire = reservation.getExemplaire();
+        reservation.setStatutReservation(Reservation.StatutReservationEnum.REFUSEE);
+        reservationRepository.save(reservation);
+
+        exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.DISPONIBLE);
+        exemplaireRepository.save(exemplaire);
+
+        HistoriqueEtat historiqueEtat = new HistoriqueEtat();
+        historiqueEtat.setEntite("RESERVATION");
+        historiqueEtat.setIdEntite(reservation.getIdReservation());
+        historiqueEtat.setEtatAvant(Exemplaire.StatutExemplaireEnum.RESERVE.toString());
+        historiqueEtat.setEtatApres(Exemplaire.StatutExemplaireEnum.DISPONIBLE.toString());
+        historiqueEtat.setDateChangement(LocalDateTime.now());
+        historiqueEtatRepository.save(historiqueEtat);
+
+        return new ReservationResult(reservation, "Réservation refusée avec succès.", false, null);
+    }
+
+    @Transactional
+    public ReservationResult transformerEnPret(Integer idReservation, String login, LocalDate datePret, LocalDate dateDeRetourPrevue, String adjustDirection) {
+        Reservation reservation = reservationRepository.findById(idReservation).orElse(null);
+        if (reservation == null) {
+            return new ReservationResult(null, "Réservation non trouvée.", false, null);
+        }
+        if (reservation.getStatutReservation() != Reservation.StatutReservationEnum.VALIDE) {
+            return new ReservationResult(null, "La réservation n'est pas validée.", false, null);
+        }
+
+        Adherent adherent = adherentRepository.findByUserAccountLogin(login);
+        if (adherent == null) {
+            return new ReservationResult(null, "Aucun adhérent trouvé avec ce login.", false, null);
+        }
+        if (adherent.getIdAdherent() != reservation.getAdherent().getIdAdherent()) {
+            return new ReservationResult(null, "L'adhérent ne correspond pas à la réservation.", false, null);
+        }
+
+        if (datePret.isAfter(reservation.getDateLimiteRecuperation())) {
+            return new ReservationResult(null, "La date du prêt est postérieure à la date limite de récupération.", false, null);
+        }
+
+        PretService.PretResult pretResult = pretService.createPret(login, reservation.getExemplaire().getIdExemplaire(), datePret, dateDeRetourPrevue, adjustDirection);
+        if (pretResult.getPret() == null) {
+            return new ReservationResult(null, pretResult.getMessage(), false, null);
+        }
+
+        reservation.setStatutReservation(Reservation.StatutReservationEnum.COMPLETEE);
+        reservationRepository.save(reservation);
+
+        HistoriqueEtat historiqueEtat = new HistoriqueEtat();
+        historiqueEtat.setEntite("RESERVATION");
+        historiqueEtat.setIdEntite(reservation.getIdReservation());
+        historiqueEtat.setEtatAvant(Reservation.StatutReservationEnum.VALIDE.toString());
+        historiqueEtat.setEtatApres(Reservation.StatutReservationEnum.COMPLETEE.toString());
+        historiqueEtat.setDateChangement(LocalDateTime.now());
+        historiqueEtatRepository.save(historiqueEtat);
+
+        return new ReservationResult(reservation, pretResult.getMessage() != null ? pretResult.getMessage() : "Réservation transformée en prêt avec succès.", false, null);
+    }
+
+    public List<Reservation> findReservationsByStatut(Reservation.StatutReservationEnum statut) {
+        return reservationRepository.findByStatutReservation(statut);
+    }
+
+    public Reservation findById(Integer idReservation) {
+        return reservationRepository.findById(idReservation).orElse(null);
     }
 
     public List<Reservation> findReservationsByLogin(String login) {
         Adherent adherent = adherentRepository.findByUserAccountLogin(login);
         if (adherent == null) {
-            return List.of();
+            return Collections.emptyList();
         }
         return reservationRepository.findByAdherent(adherent);
-    }
-
-    public Reservation findById(Integer idReservation) {
-        return reservationRepository.findById(idReservation).orElse(null);
     }
 }

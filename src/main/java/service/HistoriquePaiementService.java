@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import repository.HistoriquePaiementRepository;
 
+import java.util.List;
+
 @Service
 public class HistoriquePaiementService {
 
@@ -13,5 +15,9 @@ public class HistoriquePaiementService {
 
     public HistoriquePaiement save(HistoriquePaiement paiement) {
         return historiquePaiementRepository.save(paiement);
+    }
+
+    public List<HistoriquePaiement> findAll() {
+        return historiquePaiementRepository.findAll();
     }
 }

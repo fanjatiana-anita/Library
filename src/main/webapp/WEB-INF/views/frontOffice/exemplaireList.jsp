@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Exemplaires disponibles pour ${livre.titreLivre}</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
 </head>
 <body>
     <h2>Exemplaires disponibles pour ${livre.titreLivre}</h2>

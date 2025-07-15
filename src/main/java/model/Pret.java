@@ -4,32 +4,32 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Pret")
 public class Pret {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idPret")
     private Integer idPret;
 
     @ManyToOne
-    @JoinColumn(name = "idAdherent", nullable = false)
+    @JoinColumn(name = "idAdherent")
     private Adherent adherent;
 
     @ManyToOne
-    @JoinColumn(name = "idExemplaire", nullable = false)
+    @JoinColumn(name = "idExemplaire")
     private Exemplaire exemplaire;
 
-    @Column(name = "dateDuPret", nullable = false)
+    @Column(nullable = false)
     private LocalDate dateDuPret;
 
-    @Column(name = "dateDeRetourPrevue", nullable = false)
+    @Column(nullable = false)
     private LocalDate dateDeRetourPrevue;
 
-    @Column(name = "dateDeRetourReelle")
     private LocalDate dateDeRetourReelle;
 
-    // Getters and Setters
+    @Column(nullable = false)
+    private Integer nombreProlongement = 0;
+
+    // Getters and setters
     public Integer getIdPret() {
         return idPret;
     }
@@ -76,5 +76,13 @@ public class Pret {
 
     public void setDateDeRetourReelle(LocalDate dateDeRetourReelle) {
         this.dateDeRetourReelle = dateDeRetourReelle;
+    }
+
+    public Integer getNombreProlongement() {
+        return nombreProlongement;
+    }
+
+    public void setNombreProlongement(Integer nombreProlongement) {
+        this.nombreProlongement = nombreProlongement;
     }
 }

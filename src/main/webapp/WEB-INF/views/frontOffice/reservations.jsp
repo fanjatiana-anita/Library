@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Réserver un livre</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
 </head>
 <body>
     <h1>Liste des livres disponibles</h1>

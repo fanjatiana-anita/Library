@@ -4,38 +4,40 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "Profil")
 public class Profil {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idProfil")
     private Integer idProfil;
 
-    @Column(name = "profil")
+    @Column(nullable = false)
     private String profil;
 
-    @Column(name = "montantCotisation")
+    @Column
     private BigDecimal montantCotisation;
 
-    @Column(name = "quotaMaxPret")
+    @Column(nullable = false)
     private Integer quotaMaxPret;
 
-    @Column(name = "quotaMaxReservation")
+    @Column(nullable = false)
     private Integer quotaMaxReservation;
 
-    @Column(name = "quotaMaxProlongement")
+    @Column(nullable = false)
     private Integer quotaMaxProlongement;
 
-    @Column(name = "dureePenalite")
+    @Column(nullable = false)
     private Integer dureePenalite;
 
-    @Column(name = "dureeMaxPret")
+    @Column(nullable = false)
     private Integer dureeMaxPret;
 
-    @Column(name = "dureeAbonnement")
+    @Column(nullable = false)
+    private Integer delaiSupplementaireReservation = 2;
+
+    @Column(nullable = false)
     private Integer dureeAbonnement;
 
+    // Getters and setters
     public Integer getIdProfil() {
         return idProfil;
     }
@@ -98,6 +100,14 @@ public class Profil {
 
     public void setDureeMaxPret(Integer dureeMaxPret) {
         this.dureeMaxPret = dureeMaxPret;
+    }
+
+    public Integer getDelaiSupplementaireReservation() {
+        return delaiSupplementaireReservation;
+    }
+
+    public void setDelaiSupplementaireReservation(Integer delaiSupplementaireReservation) {
+        this.delaiSupplementaireReservation = delaiSupplementaireReservation;
     }
 
     public Integer getDureeAbonnement() {
