@@ -4,24 +4,32 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "Prolongement")
 public class Prolongement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idProlongement")
     private Integer idProlongement;
 
     @ManyToOne
-    @JoinColumn(name = "idPret", referencedColumnName = "idPret")
+    @JoinColumn(name = "idPret")
     private Pret pret;
 
-    @Column(name = "dateDeDemande", nullable = false)
-    private LocalDate dateDeDemande;
+    @ManyToOne
+    @JoinColumn(name = "idAdherent")
+    private Adherent adherent;
+
+    private LocalDate dateDemandeProlongement;
+
+    private LocalDate dateRetourPrevueApresProlongement;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "statutProlongement", nullable = false)
     private StatutProlongementEnum statutProlongement;
+
+    public enum StatutProlongementEnum {
+        EN_ATTENTE,
+        VALIDE,
+        REFUSE
+    }
 
     // Getters and Setters
     public Integer getIdProlongement() {
@@ -40,12 +48,28 @@ public class Prolongement {
         this.pret = pret;
     }
 
-    public LocalDate getDateDeDemande() {
-        return dateDeDemande;
+    public Adherent getAdherent() {
+        return adherent;
     }
 
-    public void setDateDeDemande(LocalDate dateDeDemande) {
-        this.dateDeDemande = dateDeDemande;
+    public void setAdherent(Adherent adherent) {
+        this.adherent = adherent;
+    }
+
+    public LocalDate getDateDemandeProlongement() {
+        return dateDemandeProlongement;
+    }
+
+    public void setDateDemandeProlongement(LocalDate dateDemandeProlongement) {
+        this.dateDemandeProlongement = dateDemandeProlongement;
+    }
+
+    public LocalDate getDateRetourPrevueApresProlongement() {
+        return dateRetourPrevueApresProlongement;
+    }
+
+    public void setDateRetourPrevueApresProlongement(LocalDate dateRetourPrevueApresProlongement) {
+        this.dateRetourPrevueApresProlongement = dateRetourPrevueApresProlongement;
     }
 
     public StatutProlongementEnum getStatutProlongement() {
@@ -55,8 +79,4 @@ public class Prolongement {
     public void setStatutProlongement(StatutProlongementEnum statutProlongement) {
         this.statutProlongement = statutProlongement;
     }
-}
-
-enum StatutProlongementEnum {
-    EN_ATTENTE, VALIDE, REFUSE
 }

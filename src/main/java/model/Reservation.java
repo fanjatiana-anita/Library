@@ -5,10 +5,12 @@ import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
+@Table(name = "Reservation")
 public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idReservation")
     private Integer idReservation;
 
     @ManyToOne
@@ -19,18 +21,20 @@ public class Reservation {
     @JoinColumn(name = "idExemplaire", nullable = false)
     private Exemplaire exemplaire;
 
-    @Column(nullable = false)
+    @Column(name = "dateDeReservation", nullable = false)
     private LocalDate dateDeReservation;
 
-    @Column(nullable = false)
+    @Column(name = "dateDuPretPrevue", nullable = false)
     private LocalDate dateDuPretPrevue;
 
+    @Column(name = "dateValidation")
     private LocalDate dateValidation;
 
+    @Column(name = "dateLimiteRecuperation")
     private LocalDate dateLimiteRecuperation;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "statutReservation", nullable = false)
     private StatutReservationEnum statutReservation;
 
     @Transient

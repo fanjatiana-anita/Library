@@ -71,4 +71,17 @@ public class Adherent {
     public void setDateAdhesion(LocalDate dateAdhesion) {
         this.dateAdhesion = dateAdhesion;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Adherent adherent = (Adherent) o;
+        return idAdherent != null && idAdherent.equals(adherent.idAdherent);
+    }
+
+    @Override
+    public int hashCode() {
+        return idAdherent != null ? idAdherent.hashCode() : 0;
+    }
 }

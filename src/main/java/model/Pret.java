@@ -2,6 +2,7 @@ package model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 public class Pret {
@@ -18,18 +19,18 @@ public class Pret {
     @JoinColumn(name = "idExemplaire")
     private Exemplaire exemplaire;
 
-    @Column(nullable = false)
     private LocalDate dateDuPret;
 
-    @Column(nullable = false)
     private LocalDate dateDeRetourPrevue;
 
     private LocalDate dateDeRetourReelle;
 
-    @Column(nullable = false)
-    private Integer nombreProlongement = 0;
+    private Integer nombreProlongement;
 
-    // Getters and setters
+    @OneToMany(mappedBy = "pret", cascade = CascadeType.ALL)
+    private List<Prolongement> prolongements;
+
+    // Getters and Setters
     public Integer getIdPret() {
         return idPret;
     }
@@ -84,5 +85,13 @@ public class Pret {
 
     public void setNombreProlongement(Integer nombreProlongement) {
         this.nombreProlongement = nombreProlongement;
+    }
+
+    public List<Prolongement> getProlongements() {
+        return prolongements;
+    }
+
+    public void setProlongements(List<Prolongement> prolongements) {
+        this.prolongements = prolongements;
     }
 }
