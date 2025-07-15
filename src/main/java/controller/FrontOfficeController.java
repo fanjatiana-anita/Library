@@ -24,13 +24,39 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/frontoffice")
 public class FrontOfficeController {
+
+    @Autowired
+    private LivreService livreService;
+
+    @Autowired
+    private ReservationService reservationService;
+
+    @Autowired
+    private PretService pretService;
+
+    @Autowired
+    private ReservationRepository reservationRepository;
+
+    @Autowired
+    private PretRepository pretRepository;
+
+    @Autowired
+    private ProlongementRepository prolongementRepository;
+
+    @Autowired
+    private PenalisationRepository penalisationRepository;
+    
+
+    @Autowired
+    private ExemplaireService exemplaireService;
+
+
     @Autowired
     private AdherentRepository adherentRepository;
 
     @Autowired
     private service.AbonnementService abonnementService;
 
-    // Endpoint JSON pour infos adhérent
     @GetMapping("/adherents/{id}")
     @ResponseBody
     public Map<String, Object> getAdherentInfos(@PathVariable Integer id) {
@@ -45,7 +71,6 @@ public class FrontOfficeController {
         result.put("login", user != null ? user.getLogin() : null);
         result.put("statut", adherent.getStatutAdherent());
 
-        // Abonnement actif ou expiré
         Abonnement abonnement = abonnementService.findLastByAdherent(adherent);
         boolean abonnementActif = false;
         LocalDate dateFinAbonnement = null;
@@ -56,7 +81,6 @@ public class FrontOfficeController {
         result.put("abonnementActif", abonnementActif);
         result.put("dateFinAbonnement", dateFinAbonnement);
 
-        // Quotas
         Profil profil = adherent.getProfil();
         int quotaMaxPret = profil.getQuotaMaxPret();
         int quotaMaxReservation = profil.getQuotaMaxReservation();
@@ -84,37 +108,11 @@ public class FrontOfficeController {
         result.put("quotaProlongement", nbProlongements);
         result.put("quotaMaxProlongement", quotaMaxProlongement);
 
-        // Sanctionné ou pas
         boolean sanctionne = !penalisationRepository.findByAdherentAndDateFinPenalisationAfter(adherent, LocalDate.now()).isEmpty();
         result.put("sanctionne", sanctionne);
 
         return result;
     }
-
-    @Autowired
-    private LivreService livreService;
-
-    @Autowired
-    private ReservationService reservationService;
-
-    @Autowired
-    private PretService pretService;
-
-    @Autowired
-    private ReservationRepository reservationRepository;
-
-    @Autowired
-    private PretRepository pretRepository;
-
-    @Autowired
-    private ProlongementRepository prolongementRepository;
-
-    @Autowired
-    private PenalisationRepository penalisationRepository;
-    
-
-    @Autowired
-    private ExemplaireService exemplaireService;
 
     @GetMapping("/livres/{idLivre}/exemplaires")
     @ResponseBody
@@ -136,16 +134,13 @@ public class FrontOfficeController {
             return "redirect:/login";
         }
 
-        // Nombre de réservations actives (EN_ATTENTE ou VALIDE)
         List<Reservation> reservationsActives = reservationRepository.findByAdherentAndStatutReservationIn(
                 adherent, List.of(Reservation.StatutReservationEnum.EN_ATTENTE, Reservation.StatutReservationEnum.VALIDE));
         int nombreReservationsActives = reservationsActives.size();
 
-        // Nombre de prêts actifs (dateDeRetourReelle IS NULL)
         List<Pret> pretsActifs = pretRepository.findByAdherentAndDateDeRetourReelleIsNull(adherent);
         int nombrePretsActifs = pretsActifs.size();
 
-        // Nombre total de prolongements utilisés (en attente ou validés)
         int nombreProlongements = 0;
         for (Pret pret : pretsActifs) {
             List<Prolongement> prolongements = prolongementRepository.findByPret(pret);

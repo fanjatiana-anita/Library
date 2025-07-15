@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Prolongements à valider</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
 </head>
 <body>
     <h1>Prolongements à valider</h1>

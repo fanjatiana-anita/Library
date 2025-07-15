@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Validation Prolongement</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
 </head>
 <body>
     <h1>Valider ou Refuser un Prolongement</h1>
