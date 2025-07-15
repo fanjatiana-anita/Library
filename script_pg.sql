@@ -114,8 +114,10 @@ CREATE TABLE Reservation (
 
 CREATE TABLE Prolongement (
     idProlongement SERIAL PRIMARY KEY,
-    idPret INTEGER REFERENCES Pret(idPret) ON DELETE CASCADE,
-    dateDeDemande DATE NOT NULL,
+    idPret INTEGER NOT NULL REFERENCES Pret(idPret),
+    idAdherent INTEGER NOT NULL REFERENCES Adherent(idAdherent),
+    dateDemandeProlongement DATE NOT NULL,
+    dateRetourPrevueApresProlongement DATE NOT NULL,
     statutProlongement VARCHAR(20) NOT NULL CHECK (statutProlongement IN ('EN_ATTENTE', 'VALIDE', 'REFUSE'))
 );
 
@@ -235,3 +237,5 @@ INSERT INTO Pret (idAdherent, idExemplaire, dateDuPret, dateDeRetourPrevue, date
 UPDATE Profil SET dureePenalite = 7 WHERE idProfil = 1;
 
 ALTER TABLE JourNonOuvrable ALTER COLUMN jourSemaine TYPE INTEGER;
+
+-- http://localhost:8080/spring_library_mvc/frontoffice/livres/1/exemplaires`

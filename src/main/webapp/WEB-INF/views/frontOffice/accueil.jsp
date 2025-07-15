@@ -58,6 +58,7 @@
     <div class="links">
         <p><a href="${pageContext.request.contextPath}/frontoffice/reservations">Réserver un livre</a></p>
         <p><a href="${pageContext.request.contextPath}/frontoffice/mesReservations">Voir mes réservations</a></p>
+        <p><a href="${pageContext.request.contextPath}/frontoffice/mesPrets">Voir mes prêts en cours</a></p>
         <p><a href="${pageContext.request.contextPath}/logout">Se déconnecter</a></p>
     </div>
 </body>
