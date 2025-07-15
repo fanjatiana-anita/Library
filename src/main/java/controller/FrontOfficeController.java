@@ -257,6 +257,13 @@ public class FrontOfficeController {
             return "redirect:/login";
         }
         List<Pret> prets = pretRepository.findByAdherentAndDateDeRetourReelleIsNull(adherent);
+        // Calcul du quota global utilisé uniquement sur les prêts non retournés
+        List<Prolongement> tousProlongements = prolongementRepository.findByAdherent(adherent);
+        int nbProlongementsUtilises = (int) tousProlongements.stream()
+            .filter(p -> p.getStatutProlongement() != Prolongement.StatutProlongementEnum.REFUSE && p.getPret().getDateDeRetourReelle() == null)
+            .count();
+        int quotaRestant = adherent.getProfil().getQuotaMaxProlongement() - nbProlongementsUtilises;
+
         List<Map<String, Object>> pretDisplayList = prets.stream().map(pret -> {
             Map<String, Object> display = new HashMap<>();
             display.put("pret", pret);
@@ -274,9 +281,11 @@ public class FrontOfficeController {
                 Prolongement dernierProlongement = prolongements.get(prolongements.size() - 1); // le plus récent
                 display.put("statutProlongement", dernierProlongement.getStatutProlongement());
                 display.put("prolongement", dernierProlongement);
+                display.put("quotaProlongement", 0); // Demande déjà faite, quota non disponible
             } else {
                 display.put("statutProlongement", null);
                 display.put("prolongement", null);
+                display.put("quotaProlongement", quotaRestant > 0 ? 1 : 0);
             }
             return display;
         }).collect(Collectors.toList());

@@ -118,6 +118,7 @@ CREATE TABLE Prolongement (
     idAdherent INTEGER NOT NULL REFERENCES Adherent(idAdherent),
     dateDemandeProlongement DATE NOT NULL,
     dateRetourPrevueApresProlongement DATE NOT NULL,
+    dateValidation DATE,
     statutProlongement VARCHAR(20) NOT NULL CHECK (statutProlongement IN ('EN_ATTENTE', 'VALIDE', 'REFUSE'))
 );
 

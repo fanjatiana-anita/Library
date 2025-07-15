@@ -83,16 +83,15 @@ public class ReservationService {
             return new ReservationResult(null, "L'exemplaire n'existe pas.", false, null);
         }
 
-        List<Reservation> reservationsActives = reservationRepository.findByAdherentAndStatutReservationIn(
-                adherent, Collections.singletonList(Reservation.StatutReservationEnum.EN_ATTENTE));
-        if (!reservationsActives.isEmpty()) {
-            return new ReservationResult(null, "L'adhérent a déjà une réservation en attente.", false, null);
-        }
 
-        reservationsActives = reservationRepository.findByAdherentAndStatutReservationIn(
-                adherent, Collections.singletonList(Reservation.StatutReservationEnum.VALIDE));
-        if (!reservationsActives.isEmpty()) {
-            return new ReservationResult(null, "L'adhérent a déjà une réservation validée.", false, null);
+        // Vérifier le quota de réservations (en attente ou validées)
+        List<Reservation> reservationsActives = reservationRepository.findByAdherentAndStatutReservationIn(
+            adherent,
+            List.of(Reservation.StatutReservationEnum.EN_ATTENTE, Reservation.StatutReservationEnum.VALIDE)
+        );
+        int quotaMaxReservation = adherent.getProfil().getQuotaMaxReservation();
+        if (reservationsActives.size() >= quotaMaxReservation) {
+            return new ReservationResult(null, "Quota maximum de réservations atteint.", false, null);
         }
 
         if (dateDuPretPrevue.isBefore(dateDeReservation)) {

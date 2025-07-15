@@ -13,6 +13,33 @@ import java.util.List;
 
 @Service
 public class PretService {
+    @Transactional
+    public String validerProlongement(Integer idProlongement, LocalDate dateValidation) {
+        Prolongement prolongement = prolongementRepository.findById(idProlongement).orElse(null);
+        if (prolongement == null) return "Prolongement non trouvé.";
+        Pret pret = prolongement.getPret();
+        Adherent adherent = prolongement.getAdherent();
+        if (!Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent())) return "Adhérent non actif.";
+        if (dateValidation.isBefore(prolongement.getDateDemandeProlongement())) return "Date de validation trop tôt.";
+        if (dateValidation.isAfter(pret.getDateDeRetourPrevue())) return "Date de validation trop tard.";
+        if (!penalisationRepository.findByAdherentAndDateFinPenalisationAfter(adherent, LocalDate.now()).isEmpty()) return "Adhérent sanctionné.";
+        prolongement.setStatutProlongement(Prolongement.StatutProlongementEnum.VALIDE);
+        prolongement.setDateValidation(dateValidation);
+        pret.setDateDeRetourPrevue(prolongement.getDateRetourPrevueApresProlongement());
+        pret.setNombreProlongement(pret.getNombreProlongement() + 1);
+        prolongementRepository.save(prolongement);
+        pretRepository.save(pret);
+        return "Prolongement validé.";
+    }
+
+    @Transactional
+    public String refuserProlongement(Integer idProlongement) {
+        Prolongement prolongement = prolongementRepository.findById(idProlongement).orElse(null);
+        if (prolongement == null) return "Prolongement non trouvé.";
+        prolongement.setStatutProlongement(Prolongement.StatutProlongementEnum.REFUSE);
+        prolongementRepository.save(prolongement);
+        return "Prolongement refusé.";
+    }
 
     @Autowired
     private PretRepository pretRepository;
