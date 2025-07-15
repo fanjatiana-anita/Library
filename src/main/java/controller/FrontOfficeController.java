@@ -24,6 +24,72 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("/frontoffice")
 public class FrontOfficeController {
+    @Autowired
+    private AdherentRepository adherentRepository;
+
+    @Autowired
+    private service.AbonnementService abonnementService;
+
+    // Endpoint JSON pour infos adhérent
+    @GetMapping("/adherents/{id}")
+    @ResponseBody
+    public Map<String, Object> getAdherentInfos(@PathVariable Integer id) {
+        Map<String, Object> result = new HashMap<>();
+        Adherent adherent = adherentRepository.findById(id).orElse(null);
+        if (adherent == null) {
+            result.put("error", "Adhérent non trouvé");
+            return result;
+        }
+        UserAccount user = adherent.getUserAccount();
+        result.put("id", adherent.getIdAdherent());
+        result.put("login", user != null ? user.getLogin() : null);
+        result.put("statut", adherent.getStatutAdherent());
+
+        // Abonnement actif ou expiré
+        Abonnement abonnement = abonnementService.findLastByAdherent(adherent);
+        boolean abonnementActif = false;
+        LocalDate dateFinAbonnement = null;
+        if (abonnement != null) {
+            dateFinAbonnement = abonnement.getDateFin();
+            abonnementActif = dateFinAbonnement != null && !dateFinAbonnement.isBefore(LocalDate.now());
+        }
+        result.put("abonnementActif", abonnementActif);
+        result.put("dateFinAbonnement", dateFinAbonnement);
+
+        // Quotas
+        Profil profil = adherent.getProfil();
+        int quotaMaxPret = profil.getQuotaMaxPret();
+        int quotaMaxReservation = profil.getQuotaMaxReservation();
+        int quotaMaxProlongement = profil.getQuotaMaxProlongement();
+
+        int nbPrets = pretRepository.findByAdherentAndDateDeRetourReelleIsNull(adherent).size();
+        int nbReservations = reservationRepository.findByAdherentAndStatutReservationIn(adherent, List.of(model.Reservation.StatutReservationEnum.EN_ATTENTE, model.Reservation.StatutReservationEnum.VALIDE)).size();
+        int nbProlongements = 0;
+        List<model.Pret> pretsActifs = pretRepository.findByAdherentAndDateDeRetourReelleIsNull(adherent);
+        for (model.Pret pret : pretsActifs) {
+            List<model.Prolongement> prolongements = prolongementRepository.findByPret(pret);
+            if (prolongements != null && !prolongements.isEmpty()) {
+                for (model.Prolongement p : prolongements) {
+                    if (p.getStatutProlongement() == model.Prolongement.StatutProlongementEnum.EN_ATTENTE ||
+                        p.getStatutProlongement() == model.Prolongement.StatutProlongementEnum.VALIDE) {
+                        nbProlongements++;
+                    }
+                }
+            }
+        }
+        result.put("quotaPret", nbPrets);
+        result.put("quotaMaxPret", quotaMaxPret);
+        result.put("quotaReservation", nbReservations);
+        result.put("quotaMaxReservation", quotaMaxReservation);
+        result.put("quotaProlongement", nbProlongements);
+        result.put("quotaMaxProlongement", quotaMaxProlongement);
+
+        // Sanctionné ou pas
+        boolean sanctionne = !penalisationRepository.findByAdherentAndDateFinPenalisationAfter(adherent, LocalDate.now()).isEmpty();
+        result.put("sanctionne", sanctionne);
+
+        return result;
+    }
 
     @Autowired
     private LivreService livreService;
