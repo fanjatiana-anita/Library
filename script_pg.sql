@@ -1,158 +1,158 @@
-DROP DATABASE IF EXISTS library_mvc;
-CREATE DATABASE library_mvc;
-\c library_mvc;
+    DROP DATABASE IF EXISTS library_mvc;
+    CREATE DATABASE library_mvc;
+    \c library_mvc;
 
--- Création des tables
-CREATE TABLE Personne (
-    idPersonne SERIAL PRIMARY KEY,
-    nomPersonne VARCHAR(100) NOT NULL,
-    dateDeNaissance DATE NOT NULL,
-    sexe VARCHAR(10),
-    adresse TEXT
-);
+    -- Création des tables
+    CREATE TABLE Personne (
+        idPersonne SERIAL PRIMARY KEY,
+        nomPersonne VARCHAR(100) NOT NULL,
+        dateDeNaissance DATE NOT NULL,
+        sexe VARCHAR(10),
+        adresse TEXT
+    );
 
-CREATE TABLE UserAccount (
-    idUserAccount SERIAL PRIMARY KEY,
-    idPersonne INTEGER REFERENCES Personne(idPersonne) ON DELETE CASCADE,
-    login VARCHAR(20) UNIQUE NOT NULL,
-    motDePasse VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('MEMBRE', 'BIBLIOTHECAIRE'))
-);
+    CREATE TABLE UserAccount (
+        idUserAccount SERIAL PRIMARY KEY,
+        idPersonne INTEGER REFERENCES Personne(idPersonne) ON DELETE CASCADE,
+        login VARCHAR(20) UNIQUE NOT NULL,
+        motDePasse VARCHAR(100) NOT NULL,
+        role VARCHAR(20) NOT NULL CHECK (role IN ('MEMBRE', 'BIBLIOTHECAIRE'))
+    );
 
-CREATE TABLE Profil (
-    idProfil SERIAL PRIMARY KEY,
-    profil VARCHAR(255) NOT NULL,
-    montantCotisation NUMERIC(10,2),
-    quotaMaxPret INTEGER NOT NULL,
-    quotaMaxReservation INTEGER NOT NULL,
-    quotaMaxProlongement INTEGER NOT NULL,
-    dureePenalite INTEGER NOT NULL,
-    dureeMaxPret INTEGER NOT NULL,
-    delaiSupplementaireReservation INTEGER NOT NULL DEFAULT 2,
-    dureeAbonnement INTEGER NOT NULL
-);
+    CREATE TABLE Profil (
+        idProfil SERIAL PRIMARY KEY,
+        profil VARCHAR(255) NOT NULL,
+        montantCotisation NUMERIC(10,2),
+        quotaMaxPret INTEGER NOT NULL,
+        quotaMaxReservation INTEGER NOT NULL,
+        quotaMaxProlongement INTEGER NOT NULL,
+        dureePenalite INTEGER NOT NULL,
+        dureeMaxPret INTEGER NOT NULL,
+        delaiSupplementaireReservation INTEGER NOT NULL DEFAULT 2,
+        dureeAbonnement INTEGER NOT NULL
+    );
 
-CREATE TABLE Adherent (
-    idAdherent SERIAL PRIMARY KEY,
-    idUserAccount INTEGER UNIQUE REFERENCES UserAccount(idUserAccount) ON DELETE CASCADE,
-    idProfil INTEGER REFERENCES Profil(idProfil) ON DELETE RESTRICT,
-    statutAdherent VARCHAR(20) NOT NULL CHECK (statutAdherent IN ('ACTIF', 'SUSPENDU', 'INACTIF')),
-    dateAdhesion DATE NOT NULL
-);
+    CREATE TABLE Adherent (
+        idAdherent SERIAL PRIMARY KEY,
+        idUserAccount INTEGER UNIQUE REFERENCES UserAccount(idUserAccount) ON DELETE CASCADE,
+        idProfil INTEGER REFERENCES Profil(idProfil) ON DELETE RESTRICT,
+        statutAdherent VARCHAR(20) NOT NULL CHECK (statutAdherent IN ('ACTIF', 'SUSPENDU', 'INACTIF')),
+        dateAdhesion DATE NOT NULL
+    );
 
-CREATE TABLE Bibliothecaire (
-    idBibliothecaire SERIAL PRIMARY KEY,
-    idUserAccount INTEGER UNIQUE REFERENCES UserAccount(idUserAccount) ON DELETE CASCADE
-);
+    CREATE TABLE Bibliothecaire (
+        idBibliothecaire SERIAL PRIMARY KEY,
+        idUserAccount INTEGER UNIQUE REFERENCES UserAccount(idUserAccount) ON DELETE CASCADE
+    );
 
-CREATE TABLE Abonnement (
-    idAbonnement SERIAL PRIMARY KEY,
-    idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
-    dateDebut DATE NOT NULL,
-    dateFin DATE NOT NULL
-);
+    CREATE TABLE Abonnement (
+        idAbonnement SERIAL PRIMARY KEY,
+        idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
+        dateDebut DATE NOT NULL,
+        dateFin DATE NOT NULL
+    );
 
-CREATE TABLE HistoriquePaiement (
-    idPaiement SERIAL PRIMARY KEY,
-    idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
-    datePaiement DATE NOT NULL,
-    montantCotisation NUMERIC(10, 2) NOT NULL
-);
+    CREATE TABLE HistoriquePaiement (
+        idPaiement SERIAL PRIMARY KEY,
+        idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
+        datePaiement DATE NOT NULL,
+        montantCotisation NUMERIC(10, 2) NOT NULL
+    );
 
-CREATE TABLE Auteur (
-    idAuteur SERIAL PRIMARY KEY,
-    idPersonne INTEGER REFERENCES Personne(idPersonne) ON DELETE CASCADE
-);
+    CREATE TABLE Auteur (
+        idAuteur SERIAL PRIMARY KEY,
+        idPersonne INTEGER REFERENCES Personne(idPersonne) ON DELETE CASCADE
+    );
 
-CREATE TABLE Livre (
-    idLivre SERIAL PRIMARY KEY,
-    titreLivre VARCHAR(200) NOT NULL,
-    idAuteur INTEGER REFERENCES Auteur(idAuteur) ON DELETE RESTRICT
-);
+    CREATE TABLE Livre (
+        idLivre SERIAL PRIMARY KEY,
+        titreLivre VARCHAR(200) NOT NULL,
+        idAuteur INTEGER REFERENCES Auteur(idAuteur) ON DELETE RESTRICT
+    );
 
-CREATE TABLE Exemplaire (
-    idExemplaire SERIAL PRIMARY KEY,
-    idLivre INTEGER REFERENCES Livre(idLivre) ON DELETE CASCADE,
-    statutExemplaire VARCHAR(20) NOT NULL CHECK (statutExemplaire IN ('DISPONIBLE', 'EN_PRET', 'RESERVE'))
-);
+    CREATE TABLE Exemplaire (
+        idExemplaire SERIAL PRIMARY KEY,
+        idLivre INTEGER REFERENCES Livre(idLivre) ON DELETE CASCADE,
+        statutExemplaire VARCHAR(20) NOT NULL CHECK (statutExemplaire IN ('DISPONIBLE', 'EN_PRET', 'RESERVE'))
+    );
 
-CREATE TABLE RestrictionProfilLivre (
-    idRestrictionProfilLivre SERIAL PRIMARY KEY,
-    idLivre INTEGER REFERENCES Livre(idLivre) ON DELETE CASCADE,
-    ageMinRequis INTEGER,
-    idProfil INTEGER REFERENCES Profil(idProfil) ON DELETE RESTRICT
-);
+    CREATE TABLE RestrictionProfilLivre (
+        idRestrictionProfilLivre SERIAL PRIMARY KEY,
+        idLivre INTEGER REFERENCES Livre(idLivre) ON DELETE CASCADE,
+        ageMinRequis INTEGER,
+        idProfil INTEGER REFERENCES Profil(idProfil) ON DELETE RESTRICT
+    );
 
-CREATE TABLE Pret (
-    idPret SERIAL PRIMARY KEY,
-    idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
-    idExemplaire INTEGER REFERENCES Exemplaire(idExemplaire) ON DELETE RESTRICT,
-    dateDuPret DATE NOT NULL,
-    dateDeRetourPrevue DATE NOT NULL,
-    dateDeRetourReelle DATE,
-    nombreProlongement INTEGER NOT NULL DEFAULT 0
-);
+    CREATE TABLE Pret (
+        idPret SERIAL PRIMARY KEY,
+        idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
+        idExemplaire INTEGER REFERENCES Exemplaire(idExemplaire) ON DELETE RESTRICT,
+        dateDuPret DATE NOT NULL,
+        dateDeRetourPrevue DATE NOT NULL,
+        dateDeRetourReelle DATE,
+        nombreProlongement INTEGER NOT NULL DEFAULT 0
+    );
 
-CREATE TABLE ListeLecture (
-    idListeLecture SERIAL PRIMARY KEY,
-    idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
-    idExemplaire INTEGER REFERENCES Exemplaire(idExemplaire) ON DELETE RESTRICT,
-    debutLecture TIMESTAMP NOT NULL,
-    finLecture TIMESTAMP
-);
+    CREATE TABLE ListeLecture (
+        idListeLecture SERIAL PRIMARY KEY,
+        idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
+        idExemplaire INTEGER REFERENCES Exemplaire(idExemplaire) ON DELETE RESTRICT,
+        debutLecture TIMESTAMP NOT NULL,
+        finLecture TIMESTAMP
+    );
 
-CREATE TABLE Reservation (
-    idReservation SERIAL PRIMARY KEY,
-    idAdherent INTEGER NOT NULL REFERENCES Adherent(idAdherent),
-    idExemplaire INTEGER NOT NULL REFERENCES Exemplaire(idExemplaire),
-    dateDeReservation DATE NOT NULL,
-    dateDuPretPrevue DATE NOT NULL,
-    dateValidation DATE,
-    dateLimiteRecuperation DATE,
-    statutReservation VARCHAR(50) NOT NULL CHECK (statutReservation IN ('EN_ATTENTE', 'VALIDE', 'REFUSEE', 'EXPIREE', 'COMPLETEE'))
-);
+    CREATE TABLE Reservation (
+        idReservation SERIAL PRIMARY KEY,
+        idAdherent INTEGER NOT NULL REFERENCES Adherent(idAdherent),
+        idExemplaire INTEGER NOT NULL REFERENCES Exemplaire(idExemplaire),
+        dateDeReservation DATE NOT NULL,
+        dateDuPretPrevue DATE NOT NULL,
+        dateValidation DATE,
+        dateLimiteRecuperation DATE,
+        statutReservation VARCHAR(50) NOT NULL CHECK (statutReservation IN ('EN_ATTENTE', 'VALIDE', 'REFUSEE', 'EXPIREE', 'COMPLETEE'))
+    );
 
-CREATE TABLE Prolongement (
-    idProlongement SERIAL PRIMARY KEY,
-    idPret INTEGER NOT NULL REFERENCES Pret(idPret),
-    idAdherent INTEGER NOT NULL REFERENCES Adherent(idAdherent),
-    dateDemandeProlongement DATE NOT NULL,
-    dateRetourPrevueApresProlongement DATE NOT NULL,
-    dateValidation DATE,
-    statutProlongement VARCHAR(20) NOT NULL CHECK (statutProlongement IN ('EN_ATTENTE', 'VALIDE', 'REFUSE'))
-);
+    CREATE TABLE Prolongement (
+        idProlongement SERIAL PRIMARY KEY,
+        idPret INTEGER NOT NULL REFERENCES Pret(idPret),
+        idAdherent INTEGER NOT NULL REFERENCES Adherent(idAdherent),
+        dateDemandeProlongement DATE NOT NULL,
+        dateRetourPrevueApresProlongement DATE NOT NULL,
+        dateValidation DATE,
+        statutProlongement VARCHAR(20) NOT NULL CHECK (statutProlongement IN ('EN_ATTENTE', 'VALIDE', 'REFUSE'))
+    );
 
-CREATE TABLE Penalisation (
-    idPenalisation SERIAL PRIMARY KEY,
-    idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
-    idPret INTEGER REFERENCES Pret(idPret) ON DELETE CASCADE,
-    dateDebutPenalisation DATE NOT NULL,
-    dateFinPenalisation DATE NOT NULL
-);
+    CREATE TABLE Penalisation (
+        idPenalisation SERIAL PRIMARY KEY,
+        idAdherent INTEGER REFERENCES Adherent(idAdherent) ON DELETE CASCADE,
+        idPret INTEGER REFERENCES Pret(idPret) ON DELETE CASCADE,
+        dateDebutPenalisation DATE NOT NULL,
+        dateFinPenalisation DATE NOT NULL
+    );
 
-CREATE TABLE HistoriqueEtat (
-    idHistoriqueEtat SERIAL PRIMARY KEY,
-    entite VARCHAR(50) NOT NULL CHECK (entite IN ('PRET', 'RESERVATION', 'PROLONGEMENT', 'LECTURE_SUR_PLACE')),
-    id_entite INTEGER NOT NULL,
-    date_changement TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    etat_avant VARCHAR(100),
-    etat_apres VARCHAR(100)
-);
+    CREATE TABLE HistoriqueEtat (
+        idHistoriqueEtat SERIAL PRIMARY KEY,
+        entite VARCHAR(50) NOT NULL CHECK (entite IN ('PRET', 'RESERVATION', 'PROLONGEMENT', 'LECTURE_SUR_PLACE')),
+        id_entite INTEGER NOT NULL,
+        date_changement TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        etat_avant VARCHAR(100),
+        etat_apres VARCHAR(100)
+    );
 
-CREATE TABLE JourNonOuvrable (
-    idJourNonOuvrable SERIAL PRIMARY KEY,
-    type VARCHAR(20) NOT NULL CHECK (type IN ('FERIE', 'HEBDOMADAIRE', 'EXCEPTIONNEL')),
-    jourSemaine INTEGER CHECK (jourSemaine BETWEEN 1 AND 7),
-    dateFerie DATE,
-    description VARCHAR(150)
-);
+    CREATE TABLE JourNonOuvrable (
+        idJourNonOuvrable SERIAL PRIMARY KEY,
+        type VARCHAR(20) NOT NULL CHECK (type IN ('FERIE', 'HEBDOMADAIRE', 'EXCEPTIONNEL')),
+        jourSemaine INTEGER CHECK (jourSemaine BETWEEN 1 AND 7),
+        dateFerie DATE,
+        description VARCHAR(150)
+    );
 
-ALTER TABLE JourNonOuvrable
-ADD CONSTRAINT check_jour_non_ouvrable
-CHECK (
-    (type = 'HEBDOMADAIRE' AND jourSemaine IS NOT NULL AND dateFerie IS NULL) OR
-    (type IN ('FERIE', 'EXCEPTIONNEL') AND dateFerie IS NOT NULL AND jourSemaine IS NULL)
-);
+    ALTER TABLE JourNonOuvrable
+    ADD CONSTRAINT check_jour_non_ouvrable
+    CHECK (
+        (type = 'HEBDOMADAIRE' AND jourSemaine IS NOT NULL AND dateFerie IS NULL) OR
+        (type IN ('FERIE', 'EXCEPTIONNEL') AND dateFerie IS NOT NULL AND jourSemaine IS NULL)
+    );
 
 -- Insertion des données
 INSERT INTO Personne (nomPersonne, dateDeNaissance, sexe, adresse) VALUES
@@ -170,11 +170,11 @@ INSERT INTO Profil (profil, montantCotisation, quotaMaxPret, quotaMaxReservation
 ('Personnel', 15.00, 4, 2, 2, 7, 21, 180);
 
 INSERT INTO UserAccount (idPersonne, login, motDePasse, role) VALUES
-(1, 'MBR-001', 'password123', 'MEMBRE'),
-(2, 'BIB-001', 'admin456', 'BIBLIOTHECAIRE'),
-(5, 'MBR-002', 'password456', 'MEMBRE'),
-(6, 'MBR-003', 'password789', 'MEMBRE'),
-(7, 'MBR-004', 'password012', 'MEMBRE');
+(1, 'membre1', 'membre1', 'MEMBRE'),
+(2, 'admin', 'admin', 'BIBLIOTHECAIRE'),
+(5, 'membre2', 'membre2', 'MEMBRE'),
+(6, 'membre3', 'membre3', 'MEMBRE'),
+(7, 'membre4', 'membre4', 'MEMBRE');
 
 INSERT INTO Adherent (idUserAccount, idProfil, statutAdherent, dateAdhesion) VALUES
 (1, 1, 'ACTIF', '2025-07-01'),

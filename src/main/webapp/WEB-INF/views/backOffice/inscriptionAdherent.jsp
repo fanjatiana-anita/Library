@@ -4,6 +4,8 @@
 <html>
 <head>
     <title>Inscription d'un adhérent</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
+
 </head>
 <body>
     <h2>Inscription d'un nouvel adhérent</h2>
@@ -44,7 +46,7 @@
             <option value="INACTIF">Inactif</option>
         </select><br>
         <label>Date d'adhésion: </label>
-        <input type="date" name="dateAdhesion" value="<fmt:formatDate value="${today}" pattern="yyyy-MM-dd"/>" required><br>
+        <input type="date" name="dateAdhesion" value="${today}" required><br>
         <label>Date de fin d'abonnement (facultatif): </label>
         <input type="date" name="dateFinAbonnement"><br>
 

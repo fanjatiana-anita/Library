@@ -1,0 +1,10 @@
+Abonnement
+quota
+sanctionne ou pas
+
+idLivre
+=>information livre
+liste exemplaire+disponibilite de chaque exemplaire
+
+-- http://localhost:8080/spring_library_mvc/frontoffice/livres/1/exemplaires`
+-- http://localhost:8080/spring_library_mvc/frontoffice/adherents/1
