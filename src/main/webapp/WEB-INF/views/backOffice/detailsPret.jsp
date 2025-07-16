@@ -40,20 +40,20 @@
         <tr>
             <th>Date du prêt</th>
             <td>
-                <fmt:formatDate value="${pretDisplay.dateDuPret}" pattern="yyyy-MM-dd"/>
+                <p>${pretDisplay.dateDuPret}</p>
             </td>
         </tr>
         <tr>
             <th>Date de retour prévue</th>
             <td>
-                <fmt:formatDate value="${pretDisplay.dateDeRetourPrevue}" pattern="yyyy-MM-dd"/>
+                <p>${pretDisplay.dateDeRetourPrevue}</p>
             </td>
         </tr>
         <c:if test="${pretDisplay.dateDeRetourReelle != null}">
             <tr>
                 <th>Date de retour réelle</th>
                 <td>
-                    <fmt:formatDate value="${pretDisplay.dateDeRetourReelle}" pattern="yyyy-MM-dd"/>
+                    <p>${pretDisplay.dateDeRetourReelle}</p>
                 </td>
             </tr>
         </c:if>

@@ -29,6 +29,9 @@ public class ReservationService {
     @Autowired
     private HistoriqueEtatRepository historiqueEtatRepository;
 
+    @Autowired
+    private AbonnementService abonnementService;
+
     public static class ReservationResult {
         private Reservation reservation;
         private String message;
@@ -65,6 +68,12 @@ public class ReservationService {
         if (adherent == null) {
             return new ReservationResult(null, "Aucun adhérent trouvé avec ce login.", false, null);
         }
+        // Vérification de l'activité réelle par la date de fin d'abonnement
+        Abonnement dernierAbonnement = abonnementService.findLastByAdherent(adherent);
+        if (dernierAbonnement == null || dernierAbonnement.getDateFin().isBefore(dateDeReservation)) {
+            return new ReservationResult(null, "Impossible d'effectuer cette réservation : l'adhérent n'est pas actif à la date de réservation (abonnement expiré).", false, null);
+        }
+
         if (!Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent())) {
             return new ReservationResult(null, "L'adhérent n'est pas actif.", false, null);
         }
@@ -106,7 +115,7 @@ public class ReservationService {
         reservation.setStatutReservation(Reservation.StatutReservationEnum.EN_ATTENTE);
         reservationRepository.save(reservation);
 
-        exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.RESERVE);
+        // exemplaire.setStatutExemplaire(Exemplaire.StatutExemplaireEnum.RESERVE);
         exemplaireRepository.save(exemplaire);
 
         HistoriqueEtat historiqueEtat = new HistoriqueEtat();
@@ -139,6 +148,7 @@ public class ReservationService {
         boolean isLateValidation = dateValidation.isAfter(reservation.getDateDuPretPrevue());
 
         reservation.setStatutReservation(Reservation.StatutReservationEnum.VALIDE);
+        reservation.getExemplaire().setStatutExemplaire(Exemplaire.StatutExemplaireEnum.RESERVE);
         reservation.setDateValidation(dateValidation);
         reservation.setDateLimiteRecuperation(dateLimiteRecuperation);
         reservationRepository.save(reservation);

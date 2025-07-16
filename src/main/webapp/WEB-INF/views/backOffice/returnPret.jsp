@@ -38,10 +38,10 @@
                     <td>${pretMap.pret.exemplaire.livre.titreLivre}</td>
                     <td>${pretMap.pret.exemplaire.idExemplaire}</td>
                     <td>
-                        <fmt:formatDate value="${pretMap.dateDuPret}" pattern="yyyy-MM-dd"/>
+                        <p>${pretMap.dateDuPret}</p>
                     </td>
                     <td>
-                        <fmt:formatDate value="${pretMap.dateDeRetourPrevue}" pattern="yyyy-MM-dd"/>
+                        <p>${pretMap.dateDeRetourPrevue}</p>
                     </td>
                     <td><a href="${pageContext.request.contextPath}/backoffice/formReturn?idPret=${pretMap.pret.idPret}">Retourner</a></td>
                 </tr>

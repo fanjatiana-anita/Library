@@ -36,8 +36,8 @@
                             <td>${paiement.idPaiement}</td>
                             <td>${paiement.adherent.userAccount.personne.nomPersonne}</td>
                             <td>
-                                <fmt:parseDate value="${paiement.datePaiement}" pattern="yyyy-MM-dd" var="parsedDatePaiement"/>
-                                <fmt:formatDate value="${parsedDatePaiement}" pattern="yyyy-MM-dd"/>
+                                <p>${paiement.datePaiement}</p>
+                                <p>${parsedDatePaiement}</p>
                             </td>
                             <td>${paiement.montantCotisation}</td>
                         </tr>
@@ -67,14 +67,14 @@
                 <tbody>
                     <c:forEach var="etat" items="${etats}">
                         <tr>
-                            <td>${etat.idHistorique}</td>
+                            <td>${etat.idHistoriqueEtat}</td>
                             <td>${etat.entite}</td>
                             <td>${etat.idEntite}</td>
                             <td>${etat.etatAvant != null ? etat.etatAvant : 'N/A'}</td>
                             <td>${etat.etatApres}</td>
                             <td>
-                                <fmt:parseDate value="${etat.dateChangement}" pattern="yyyy-MM-dd'T'HH:mm:ss" var="parsedDateChangement"/>
-                                <fmt:formatDate value="${parsedDateChangement}" pattern="yyyy-MM-dd HH:mm:ss"/>
+                                <p>${etat.dateChangement}</p>
+                                <p>${parsedDateChangement}</p>
                             </td>
                         </tr>
                     </c:forEach>

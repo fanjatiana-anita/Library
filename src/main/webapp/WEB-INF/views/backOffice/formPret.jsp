@@ -47,6 +47,6 @@
         </p>
         <input type="submit" value="Enregistrer le Prêt"/>
     </form>
-    <p><a href="${pageContext.request.contextPath}/backoffice">Retour</a></p>
+    <p><a href="${pageContext.request.contextPath}/backoffice/dashboard">Retour</a></p>
 </body>
 </html>

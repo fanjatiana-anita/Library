@@ -55,7 +55,6 @@ public class BackOfficeProlongementController {
         return "backOffice/formValidationProlongement";
     }
 
-    // Traitement de la validation/refus
     @PostMapping("/processValidationProlongement")
     public String processValidationProlongement(
             @RequestParam("idProlongement") Integer idProlongement,

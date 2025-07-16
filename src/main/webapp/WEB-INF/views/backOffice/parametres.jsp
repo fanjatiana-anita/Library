@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Paramètres du système</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
+
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1 { color: #333; }

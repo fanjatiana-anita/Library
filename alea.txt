@@ -8,3 +8,118 @@ liste exemplaire+disponibilite de chaque exemplaire
 
 -- http://localhost:8080/spring_library_mvc/frontoffice/livres/1/exemplaires`
 -- http://localhost:8080/spring_library_mvc/frontoffice/adherents/1
+
+
+INSCRIPTION 
+regle de gestion :
+date adhesion par defaut la date actuelle mais modifiable
+date de naissance < date actuelle
+Login non encore existant
+date fin d'Abonnement(facultatif)
+    -Si non saisie -> calculer a partir de la somme de date d'hadesion et la duree d'abonnement selon son profil
+    -Si saisie  -> strictement superieur a la date d'hadesion
+
+REABONNEMENT
+regle de gestion :
+Login existant
+date de paiement >= a la derniere date d'abonnement de l'adherent 
+date fin d'Abonnement(facultatif)
+    -Si non saisie -> calculer a partir de la somme de date d'hadesion et la duree d'abonnement selon son profil
+    -Si saisie  -> strictement superieur a la date du fin du dernier abonnement fait par l'adherent
+
+
+RESERVATION 
+Exemplaire disponible :disponible ou reserve(statut exemplaire)
+Age adherent >= age minimal requis dans RestrictionProfilLivre
+Adherent toujours actif (date de fin d'abonnement (le plus recent)> date de reservation)
+Adherent non sanctionne
+quota de reservation actuelle n'a pas encore atteint le max
+Tous les dates de retour d'un pret en cours fais par l'adherent doit etre < date de demande de reservation sinon message d'erreur indiquant que les prets en retard doivent etre retourner .
+
+date de reservation par defaut la date actuelle mais parametrable
+date du pret prevu >= date de resevation
+
+VALIDATION DEMANDE DE PRET(RESERVATION):
+date de validation >= date de demande de reservation et 
+    Si date de validation > date de pret prevu
+        
+        ->Il y aura une date de limite de recuperation de l'exemplaire (la duree est parametrable)
+    Si date de validation <= date de pret prevu
+        Il n'y aura pas une date de limite de recuperation, seul la date de pret est fixe
+
+
+
+GESTION DES PRETS 
+Exemplaire disponible :disponible ou reserve(statut exemplaire)
+Age adherent >= age minimal requis dans RestrictionProfilLivre
+Adherent toujours actif (date de fin d'abonnement(le plus recent) > date de pret)
+Adherent non sanctionne
+quota de pret actuelle n'a pas encore atteint le max
+Tous les dates de retour d'un pret en cours fais par l'adherent doit etre < date du pret sinon message d'erreur indiquant que les prets en retard doivent etre retourner .
+
+Si c'est un non issus d'une reservation
+    date du pret(par defaut la date actuelle mais modifiable)
+    date fin de retour prevu(facultatif)
+        -Si non saisie -> calculer a partir de la somme de date du pret et la duree max du pret selon son profil 
+        -Si saisie  -> date de retour > a la date du pret
+    -Si la date du retour tombe sur un jour non ouvrable alors on va reculer ou avancer cette date(selon les parametres ) au premier jour 
+    ouvrable avant ou apres ce ou ces jours non ouvrable (car il peut y avoir 2 ou plusieurs jours non ouvrables successive comme par exemple le samedi et dimanche donc 
+    l'exemplaire doit etre retourner soit le vendredi soit le lundi) -> Affichage d'un message montrant que ca a tombe a un jour non ouvrable et c'est recale ou decale a une date donnee selon les parametres
+Si c'est un pret issus d'une reservation validee
+    -Pour les reservation avec validation en retard
+        date du pret (par defaut la date actuelle mais modifiable) >= date de validation de pret et <= date de limite de recuperation 
+        date fin de retour prevu(facultatif)
+            Si non saisie -> calculer a partir de la somme de date du pret et la duree max du pret selon son profil 
+            Si saisie  -> date de retour > a la date du pret
+        ========== Scenario alternatif:
+        Si date du pret > date de limite de recuperation -> message d'erreur
+
+    -Pour les reservation avec validation non en retard
+        date du pret (par defaut la date actuelle mais modifiable) = date de pret prevue
+        date fin de retour prevu(facultatif)
+            Si non saisie -> calculer a partir de la somme de date du pret et la duree max du pret selon son profil 
+            Si saisie  -> date de retour > a la date du pret
+        ========== Scenario alternatif:
+        Si date du pret > date du pret prevu lors de la reservation -> message d'erreur
+
+RETOUR DE PRET
+date de retour du pret > date du pret
+Si date de retour > date de retour prevu
+Adherent penalise
+    Date de fin de penalite
+        Si adherent est en penalite (date de fin de penalite(le plus recent) >= date du retour du pret)
+            date de fin de penalite = date de fin de penalite(le plus recent)+dureePenalite selon le profil
+        Si il n'est pas penalise (n'a jamais eu de penalisation ou date de fin de penalite(le plus recent) < date du retour du pret)
+            date de fin de penalite = date du retour du pret +dureePenalite selon le profil
+
+DEMANDE DE PROLONGEMENT
+
+Exemplaire disponible :disponible ou reserve(statut exemplaire)
+Adherent toujours actif (date de fin d'abonnement(le plus recent) > date de prolongement)
+Adherent non sanctionne (n'a jamais eu de penalisation ou date de fin de penalite(le plus recent) < date de demande de prolongement)
+quota de prolongement actuelle n'a pas encore atteint le max
+Tous les dates de retour d'un pret en cours fais par l'adherent doit etre < date de demande de prolongement sinon message d'erreur indiquant que les prets en retard doivent etre retourner .
+
+date de demande de prolongement par defaut la date actuelle mais modifiable
+date de demande de prolongement < date de retour du pret prevue avant la demande de prolongement
+nouvelle date de retour prevu(facultatif)
+    Si non saisie -> calculer a partir de la somme de date de demande de prolongement et la duree max du pret selon son profil 
+    Si saisie  -> date de retour > a la date de demande de prolongement
+
+
+VALIDATION DEMANDE DE PROLONGEMENT:
+date de validation >= date de demande de prolongement 
+   
+La date de validation de reservation >= date de demande reservation
+
+La date du pret ne dois pas etre < a la date du pret prevu pour les pret issus d'une reservation
+Voici des regles claires:
+    Pour les prets non issus d'une reservation:
+        date de retour > date du pret(par defaut la date actuelle mais modifiable)
+    Pour les prets issus d'une reservation
+        date de retour > date de validation de reservation et > date du prets
+Si la date de retour tombe a un jour non ouvrable alors on decale ou recale(selon les parametres) au premier jour ouvrable la date de retour.
+
+Remarque pour la validation de reservation, on ne fais que verifier les regles de gestion de date mais on peut toujours valider une reservation meme si l'exemplaire est non disponible
+c'est lors du Transformation de la reservation en pret(recuperation de l'exemplaire) que l'on verifie si elle est disponible ou pas .
+Lors du pret on peut prendre les exemplaires qui sont disponible ou meme reservee

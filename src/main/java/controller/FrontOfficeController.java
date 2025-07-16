@@ -13,6 +13,7 @@ import service.PretService;
 import service.ReservationService;
 import repository.*;
 
+import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
@@ -192,8 +193,8 @@ public class FrontOfficeController {
         }
         Integer idExemplaire = pretService.findAvailableExemplaire(idLivre);
         if (idExemplaire == null) {
-            model.addAttribute("error", "Aucun exemplaire disponible pour ce livre.");
-            return "redirect:/frontoffice/reservations";
+            //model.addAttribute("error", "Aucun exemplaire disponible pour ce livre.");
+            return "redirect:/frontoffice/reservations?error=Aucun+exemplaire+disponible+pour+ce+livre.";
         }
         model.addAttribute("idLivre", idLivre);
         model.addAttribute("idExemplaire", idExemplaire);

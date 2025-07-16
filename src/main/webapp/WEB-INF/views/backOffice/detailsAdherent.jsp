@@ -4,11 +4,14 @@
 <html>
 <head>
     <title>Détails de l'adhérent</title>
+    <link href="${pageContext.request.contextPath}/css/style.css" rel="stylesheet">
+    
 </head>
 <body>
     <h2>Détails de l'adhérent</h2>
     <c:if test="${not empty error}">
         <p style="color: red;">${error}</p>
+
     </c:if>
     <h3>Informations personnelles</h3>
     <p><strong>Nom :</strong> ${personne.nomPersonne}</p>

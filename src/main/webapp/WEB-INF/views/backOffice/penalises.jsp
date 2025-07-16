@@ -35,12 +35,12 @@
                             <td>${penalite.idPenalisation}</td>
                             <td>${penalite.adherent.userAccount.personne.nomPersonne}</td>
                             <td>
-                                <fmt:parseDate value="${penalite.dateDebutPenalisation}" pattern="yyyy-MM-dd" var="parsedDateDebut"/>
-                                <fmt:formatDate value="${parsedDateDebut}" pattern="yyyy-MM-dd"/>
+                                <p>${penalite.dateDebutPenalisation}</p>
+                                <!-- <fmt:formatDate value="${parsedDateDebut}" pattern="yyyy-MM-dd"/> -->
                             </td>
                             <td>
-                                <fmt:parseDate value="${penalite.dateFinPenalisation}" pattern="yyyy-MM-dd" var="parsedDateFin"/>
-                                <fmt:formatDate value="${parsedDateFin}" pattern="yyyy-MM-dd"/>
+                                <p>${penalite.dateFinPenalisation}</p>
+                                <!-- <fmt:formatDate value="${parsedDateFin}" pattern="yyyy-MM-dd"/> -->
                             </td>
                         </tr>
                     </c:forEach>

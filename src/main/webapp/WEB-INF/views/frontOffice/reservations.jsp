@@ -10,6 +10,9 @@
     <c:if test="${not empty error}">
         <p style="color: red;">${error}</p>
     </c:if>
+    <c:if test="${not empty param.error}">
+        <p style="color: red;">${param.error}</p>
+    </c:if>
     <table border="1">
         <tr>
             <th>Titre</th>

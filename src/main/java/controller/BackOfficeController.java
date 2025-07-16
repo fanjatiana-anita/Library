@@ -1,4 +1,4 @@
-package controller;
+ package controller;
 
 import jakarta.servlet.http.HttpSession;
 import model.*;
@@ -111,6 +111,7 @@ public class BackOfficeController {
             return "redirect:/login";
         }
 
+        // Vérification login unique
         if (userAccountService.findByLogin(login) != null) {
             model.addAttribute("error", "Ce login est déjà utilisé.");
             model.addAttribute("profils", profilService.findAll());
@@ -119,9 +120,43 @@ public class BackOfficeController {
         }
 
         try {
+            // Vérification des champs obligatoires
+            if (nomPersonne == null || nomPersonne.trim().isEmpty()) {
+                model.addAttribute("error", "Le nom est obligatoire.");
+                model.addAttribute("profils", profilService.findAll());
+                model.addAttribute("today", LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+                return "backOffice/inscriptionAdherent";
+            }
+            if (dateDeNaissance == null || dateDeNaissance.trim().isEmpty()) {
+                model.addAttribute("error", "La date de naissance est obligatoire.");
+                model.addAttribute("profils", profilService.findAll());
+                model.addAttribute("today", LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+                return "backOffice/inscriptionAdherent";
+            }
+            LocalDate naissance = LocalDate.parse(dateDeNaissance);
+            if (!naissance.isBefore(LocalDate.now())) {
+                model.addAttribute("error", "La date de naissance doit être antérieure à aujourd'hui.");
+                model.addAttribute("profils", profilService.findAll());
+                model.addAttribute("today", LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+                return "backOffice/inscriptionAdherent";
+            }
+            if (dateAdhesion == null || dateAdhesion.trim().isEmpty()) {
+                model.addAttribute("error", "La date d'adhésion est obligatoire.");
+                model.addAttribute("profils", profilService.findAll());
+                model.addAttribute("today", LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+                return "backOffice/inscriptionAdherent";
+            }
+            LocalDate adhesionDate = LocalDate.parse(dateAdhesion);
+            if (adhesionDate.isAfter(LocalDate.now())) {
+                model.addAttribute("error", "La date d'adhésion ne peut pas être dans le futur.");
+                model.addAttribute("profils", profilService.findAll());
+                model.addAttribute("today", LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+                return "backOffice/inscriptionAdherent";
+            }
+
             Personne personne = new Personne();
             personne.setNomPersonne(nomPersonne);
-            personne.setDateDeNaissance(LocalDate.parse(dateDeNaissance));
+            personne.setDateDeNaissance(naissance);
             personne.setSexe(sexe);
             personne.setAdresse(adresse);
             personne = personneService.save(personne);
@@ -138,7 +173,6 @@ public class BackOfficeController {
             Profil profil = profilService.findById(idProfil);
             adherent.setProfil(profil);
             adherent.setStatutAdherent(Adherent.StatutAdherentEnum.valueOf(statutAdherent.toUpperCase()));
-            LocalDate adhesionDate = LocalDate.parse(dateAdhesion);
             adherent.setDateAdhesion(adhesionDate);
             adherent = adherentService.save(adherent);
 
@@ -148,7 +182,7 @@ public class BackOfficeController {
             LocalDate dateFin;
             if (dateFinAbonnement != null && !dateFinAbonnement.isEmpty()) {
                 dateFin = LocalDate.parse(dateFinAbonnement);
-                if (dateFin.isBefore(adhesionDate)) {
+                if (!dateFin.isAfter(adhesionDate)) {
                     model.addAttribute("error", "La date de fin d'abonnement doit être postérieure à la date d'adhésion.");
                     model.addAttribute("profils", profilService.findAll());
                     model.addAttribute("today", LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));

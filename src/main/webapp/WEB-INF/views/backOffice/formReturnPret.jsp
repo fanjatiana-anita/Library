@@ -37,13 +37,13 @@
         <tr>
             <th>Date du prêt</th>
             <td>
-                <fmt:formatDate value="${pretDisplay.dateDuPret}" pattern="yyyy-MM-dd"/>
+                <p>${pretDisplay.dateDuPret}</p>
             </td>
         </tr>
         <tr>
             <th>Date de retour prévue</th>
             <td>
-                <fmt:formatDate value="${pretDisplay.dateDeRetourPrevue}" pattern="yyyy-MM-dd"/>
+                <p>${pretDisplay.dateDeRetourPrevue}</p>
             </td>
         </tr>
     </table>
@@ -53,8 +53,7 @@
         <input type="hidden" name="idPret" value="${pretDisplay.pret.idPret}">
         <p>
             <label for="dateDeRetourReelle">Date de retour réelle :</label>
-            <input type="date" id="dateDeRetourReelle" name="dateDeRetourReelle" 
-                   value="<fmt:formatDate value='${today}' pattern='yyyy-MM-dd'/>" required>
+            <input type="date" name="dateDeRetourReelle" value="${today}" required><br>
         </p>
         <p>
             <input type="submit" value="Confirmer le retour">

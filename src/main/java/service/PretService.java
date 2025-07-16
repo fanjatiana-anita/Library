@@ -68,6 +68,9 @@ public class PretService {
     @Autowired
     private ProlongementRepository prolongementRepository;
 
+    @Autowired
+    private AbonnementService abonnementService;
+
     public static class PretResult {
         private Pret pret;
         private String message;
@@ -144,6 +147,11 @@ public class PretService {
         if (adherent == null) {
             return new PretResult(null, "Aucun adhérent trouvé avec ce login.", null, null);
         }
+        // Vérification de l'activité réelle par la date de fin d'abonnement
+        Abonnement dernierAbonnement = abonnementService.findLastByAdherent(adherent);
+        if (dernierAbonnement == null || dernierAbonnement.getDateFin().isBefore(datePret)) {
+            return new PretResult(null, "Impossible d'effectuer ce prêt : l'adhérent n'est pas actif à la date du prêt (abonnement expiré).", null, null);
+        }
         if (!Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent())) {
             return new PretResult(null, "L'adhérent n'est pas actif.", null, null);
         }
@@ -167,9 +175,8 @@ public class PretService {
         if (exemplaire == null) {
             return new PretResult(null, "L'exemplaire n'existe pas.", null, null);
         }
-        if (!(Exemplaire.StatutExemplaireEnum.DISPONIBLE.equals(exemplaire.getStatutExemplaire()) ||
-              Exemplaire.StatutExemplaireEnum.RESERVE.equals(exemplaire.getStatutExemplaire()))) {
-            return new PretResult(null, "L'exemplaire n'est ni disponible ni réservé.", null, null);
+        if (!(Exemplaire.StatutExemplaireEnum.DISPONIBLE.equals(exemplaire.getStatutExemplaire()))) {
+            return new PretResult(null, "L'exemplaire n'est pas disponible ", null, null);
         }
 
         // Vérification des restrictions
@@ -302,6 +309,11 @@ public class PretService {
         if (adherent == null) {
             return new ProlongementResult(null, "Aucun adhérent trouvé avec ce login.");
         }
+        // Vérification de l'activité réelle par la date de fin d'abonnement
+        Abonnement dernierAbonnement = abonnementService.findLastByAdherent(adherent);
+        if (dernierAbonnement == null || dernierAbonnement.getDateFin().isBefore(dateDemandeProlongement)) {
+            return new ProlongementResult(null, "Impossible de demander un prolongement : l'adhérent n'est pas actif à la date de la demande (abonnement expiré).");
+        }
         if (!Adherent.StatutAdherentEnum.ACTIF.equals(adherent.getStatutAdherent())) {
             return new ProlongementResult(null, "L'adhérent n'est pas actif.");
         }
@@ -385,7 +397,7 @@ public class PretService {
 
     public Integer findAvailableExemplaire(Integer idLivre) {
         List<Exemplaire> exemplaires = exemplaireRepository.findAll().stream()
-                .filter(e -> e.getLivre().getIdLivre().equals(idLivre) && e.getStatutExemplaire() == Exemplaire.StatutExemplaireEnum.DISPONIBLE)
+                .filter(e -> e.getLivre().getIdLivre().equals(idLivre) && (e.getStatutExemplaire() == Exemplaire.StatutExemplaireEnum.DISPONIBLE || e.getStatutExemplaire() == Exemplaire.StatutExemplaireEnum.RESERVE))
                 .toList();
         return exemplaires.isEmpty() ? null : exemplaires.get(0).getIdExemplaire();
     }
